@@ -1,20 +1,87 @@
-// DSA_Assignment.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
+#include "MovieApp.h"
 #include <iostream>
+#include <limits> // for cin.ignore()
+using namespace std;
 
-int main()
-{
-    std::cout << "Hello World!\n";
+void displayMenu() {
+    cout << "\n========== Movie Management System ==========\n";
+    cout << "1. Add New Actor\n";
+    cout << "2. Add New Movie\n";
+    cout << "3. Add Actor to Movie\n";
+    cout << "4. Display All Actors\n";
+    cout << "5. Display All Movies\n";
+    cout << "6. Exit\n";
+    cout << "Enter your choice: ";
 }
 
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
+int main() {
+    MovieApp app;
+    int choice;
 
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
+    do {
+        displayMenu();
+        cin >> choice;
+
+        if (cin.fail()) {
+            cin.clear(); // Clear error flag
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Ignore invalid input
+            cout << "Invalid input! Please enter a number between 1 and 6.\n";
+            continue;
+        }
+
+        switch (choice) {
+        case 1: {
+            string name;
+            int yearOfBirth;
+            cout << "Enter actor name: ";
+            cin.ignore();
+            getline(cin, name);
+            cout << "Enter year of birth: ";
+            cin >> yearOfBirth;
+            app.addNewActor(name, yearOfBirth);
+            break;
+        }
+        case 2: {
+            string title, plot;
+            int releaseYear;
+            cout << "Enter movie title: ";
+            cin.ignore();
+            getline(cin, title);
+            cout << "Enter movie plot: ";
+            getline(cin, plot);
+            cout << "Enter release year: ";
+            cin >> releaseYear;
+            app.addNewMovie(title, plot, releaseYear);
+            break;
+        }
+        case 3: {
+            string actorName, movieTitle;
+            cout << "Enter actor name: ";
+            cin.ignore();
+            getline(cin, actorName);
+            cout << "Enter movie title: ";
+            getline(cin, movieTitle);
+            app.addActorToMovie(actorName, movieTitle);
+            break;
+        }
+        case 4:
+            cout << "\nDisplaying all actors:\n";
+            app.displayAllActors();
+            break;
+        case 5:
+            cout << "\nDisplaying all movies:\n";
+            app.displayAllMovies();
+            break;
+        case 6:
+            cout << "Exiting... Thank you for using the Movie Management System!\n";
+            break;
+        default:
+            cout << "Invalid choice. Please select a valid option (1-6).\n";
+        }
+
+        cout << endl;
+
+    } while (choice != 6);
+
+    return 0;
+}
