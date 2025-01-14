@@ -17,6 +17,27 @@ void trimString(std::string& str) {
     }
 }
 
+// Utility function to clean CSV field data
+std::string cleanCSVField(const std::string& field) {
+    std::string cleaned = field;
+
+    // Remove semicolons
+    cleaned.erase(std::remove(cleaned.begin(), cleaned.end(), ';'), cleaned.end());
+
+    // Remove quotes if they exist at start and end
+    if (cleaned.size() >= 2 && cleaned.front() == '"' && cleaned.back() == '"') {
+        cleaned = cleaned.substr(1, cleaned.size() - 2);
+    }
+
+    // Remove any \r characters (carriage returns)
+    cleaned.erase(std::remove(cleaned.begin(), cleaned.end(), '\r'), cleaned.end());
+
+    // Trim whitespace
+    trimString(cleaned);
+
+    return cleaned;
+}
+
 // Utility function to convert string to lowercase
 std::string toLowerCase(const std::string& str) {
     std::string lowerStr = str;
@@ -101,7 +122,7 @@ void MovieApp::updateMovieDetails(int id, const std::string& newTitle, const std
     }
 }
 
-// Read Actors from CSV
+// Modified readActors function
 void MovieApp::readActors(const string& fileName) {
     ifstream file(fileName);
     if (!file.is_open()) {
@@ -120,16 +141,26 @@ void MovieApp::readActors(const string& fileName) {
         getline(ss, name, ',');
         getline(ss, birthStr);
 
-        id = stoi(idStr);
-        yearOfBirth = stoi(birthStr);
-        trimString(name);
+        // Clean the fields
+        idStr = cleanCSVField(idStr);
+        name = cleanCSVField(name);
+        birthStr = cleanCSVField(birthStr);
 
-        actorList.add(Actor(name, yearOfBirth, id));
+        try {
+            id = stoi(idStr);
+            yearOfBirth = stoi(birthStr);
+
+            actorList.add(Actor(name, yearOfBirth, id));
+        }
+        catch (const std::exception& e) {
+            cerr << "Error processing line: " << line << "\nError: " << e.what() << endl;
+            continue;
+        }
     }
     file.close();
 }
 
-// Read Movies from CSV
+// Modified readMovies function
 void MovieApp::readMovies(const string& fileName) {
     ifstream file(fileName);
     if (!file.is_open()) {
@@ -148,16 +179,26 @@ void MovieApp::readMovies(const string& fileName) {
         getline(ss, title, ',');
         getline(ss, yearStr);
 
-        id = stoi(idStr);
-        releaseYear = stoi(yearStr);
-        trimString(title);
+        // Clean the fields
+        idStr = cleanCSVField(idStr);
+        title = cleanCSVField(title);
+        yearStr = cleanCSVField(yearStr);
 
-        movieList.add(Movie(title, "", releaseYear, id));
+        try {
+            id = stoi(idStr);
+            releaseYear = stoi(yearStr);
+
+            movieList.add(Movie(title, "", releaseYear, id));
+        }
+        catch (const std::exception& e) {
+            cerr << "Error processing line: " << line << "\nError: " << e.what() << endl;
+            continue;
+        }
     }
     file.close();
 }
 
-// Read Cast from CSV
+// Modified readCast function
 void MovieApp::readCast(const string& fileName) {
     ifstream file(fileName);
     if (!file.is_open()) {
@@ -175,14 +216,24 @@ void MovieApp::readCast(const string& fileName) {
         getline(ss, actorIdStr, ',');
         getline(ss, movieIdStr);
 
-        actorId = stoi(actorIdStr);
-        movieId = stoi(movieIdStr);
+        // Clean the fields
+        actorIdStr = cleanCSVField(actorIdStr);
+        movieIdStr = cleanCSVField(movieIdStr);
 
-        Actor* actor = actorList.findById(actorId);
-        Movie* movie = movieList.findById(movieId);
+        try {
+            actorId = stoi(actorIdStr);
+            movieId = stoi(movieIdStr);
 
-        if (actor && movie) {
-            movie->addActor(*actor);
+            Actor* actor = actorList.findById(actorId);
+            Movie* movie = movieList.findById(movieId);
+
+            if (actor && movie) {
+                movie->addActor(*actor);
+            }
+        }
+        catch (const std::exception& e) {
+            cerr << "Error processing line: " << line << "\nError: " << e.what() << endl;
+            continue;
         }
     }
     file.close();
