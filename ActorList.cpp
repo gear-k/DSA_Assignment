@@ -68,3 +68,15 @@ void ActorList::displayAll() const {
         temp = temp->next;
     }
 }
+
+Actor* ActorList::findById(int id) {
+    Node* current = head;
+    while (current) {
+        if (current->actor.getId() == id) {
+            return &current->actor;
+        }
+        current = current->next;
+    }
+    return nullptr;
+}
+

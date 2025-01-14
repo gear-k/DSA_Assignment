@@ -1,7 +1,14 @@
 #include "Actor.h"
 
-Actor::Actor(const string& name, int yearOfBirth)
-    : name(name), yearOfBirth(yearOfBirth), age(2025 - yearOfBirth) {
+Actor::Actor(const string& name, int yearOfBirth, int id)
+    : id(id), name(name), yearOfBirth(yearOfBirth), age(2025 - yearOfBirth) {}
+
+int Actor::getId() const {
+    return id;
+}
+
+void Actor::setId(int newId) {
+    id = newId;
 }
 
 string Actor::getName() const {
@@ -26,5 +33,6 @@ void Actor::setYearOfBirth(int newYearOfBirth) {
 }
 
 void Actor::displayDetails() const {
-    cout << "Actor: " << name << ", Year of Birth: " << yearOfBirth << ", Age: " << age << endl;
+    cout << "Actor ID: " << id << ", Name: " << name << ", Year of Birth: " << yearOfBirth
+        << ", Age: " << age << endl;
 }

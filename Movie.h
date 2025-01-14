@@ -1,28 +1,34 @@
-#pragma once
+#ifndef MOVIE_H
+#define MOVIE_H
+
 #include <string>
 #include "ActorList.h"
+using namespace std;
 
 class Movie {
 private:
+    int id; // Movie's unique ID
     string title;
     string plot;
     int releaseYear;
-    ActorList actors;
+    ActorList actors; // List of actors in the movie
 
 public:
-    Movie(const string& title, const string& plot, int releaseYear);
+    Movie(const string& title, const string& plot, int releaseYear, int id);
 
-    // Accessors
+    int getId() const;
+    void setId(int newId);
+
     string getTitle() const;
     string getPlot() const;
     int getReleaseYear() const;
 
-    // Mutators
     void setTitle(const string& newTitle);
     void setPlot(const string& newPlot);
     void setReleaseYear(int newYear);
 
-    // Actor management
     void addActor(const Actor& actor);
     void displayDetails() const;
 };
+
+#endif

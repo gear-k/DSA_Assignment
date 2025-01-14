@@ -20,4 +20,5 @@ public:
     int getLength() const;
     bool isEmpty() const;
     void displayAll() const;
+    Movie* findById(int id);
 };

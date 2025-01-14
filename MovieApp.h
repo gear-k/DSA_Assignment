@@ -12,4 +12,7 @@ public:
     void addActorToMovie(const string& actorName, const string& movieTitle);
     void displayAllActors() const;
     void displayAllMovies() const;
+    void readActors(const string& fileName);
+    void readMovies(const string& fileName);
+    void readCast(const string& fileName);
 };

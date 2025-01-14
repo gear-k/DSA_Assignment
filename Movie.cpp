@@ -1,8 +1,16 @@
 #include "Movie.h"
 #include <iostream>
 
-Movie::Movie(const string& title, const string& plot, int releaseYear)
-    : title(title), plot(plot), releaseYear(releaseYear) {
+// Constructor implementation in Movie.cpp
+Movie::Movie(const string& title, const string& plot, int releaseYear, int id)
+    : id(id), title(title), plot(plot), releaseYear(releaseYear) {}
+
+int Movie::getId() const {
+    return id;
+}
+
+void Movie::setId(int newId) {
+    id = newId;
 }
 
 string Movie::getTitle() const {
@@ -34,7 +42,7 @@ void Movie::addActor(const Actor& actor) {
 }
 
 void Movie::displayDetails() const {
-    cout << "Movie: " << title << ", Plot: " << plot << ", Release Year: " << releaseYear << endl;
+    cout << "Movie ID: " << id << ", Title: " << title << ", Release Year: " << releaseYear << endl;
     cout << "Actors in this movie:" << endl;
     actors.displayAll();
 }

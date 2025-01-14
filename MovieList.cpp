@@ -68,3 +68,14 @@ void MovieList::displayAll() const {
         temp = temp->next;
     }
 }
+
+Movie* MovieList::findById(int id) {
+    Node* current = head;
+    while (current) {
+        if (current->movie.getId() == id) {
+            return &current->movie;
+        }
+        current = current->next;
+    }
+    return nullptr;
+}

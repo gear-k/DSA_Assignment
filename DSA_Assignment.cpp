@@ -16,8 +16,13 @@ void displayMenu() {
 
 int main() {
     MovieApp app;
-    int choice;
+    cout << "Loading data from CSV files...\n";
+    app.readActors("actors.csv");
+    app.readMovies("movies.csv");
+    app.readCast("cast.csv");
+    cout << "Data loaded successfully.\n";
 
+    int choice;
     do {
         displayMenu();
         cin >> choice;
