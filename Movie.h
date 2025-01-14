@@ -3,37 +3,30 @@
 
 #include <string>
 #include "ActorList.h"
-using namespace std;
 
 class Movie {
 private:
-    int id; // Movie's unique ID
-    string title;
-    string plot;
+    int id;           // Unique ID for the movie
+    std::string title;
+    std::string plot;
     int releaseYear;
     ActorList actors; // List of actors in the movie
 
 public:
-    Movie(const string& title, const string& plot, int releaseYear, int id);
+    Movie(const std::string& title, const std::string& plot, int releaseYear, int id);
 
     int getId() const;
-    void setId(int newId);
-    ActorList& getActors();           // Declaration of non-const version
-    const ActorList& getActors() const; // Declaration of const version
-
-
-    string getTitle() const;
-    string getPlot() const;
-    int getReleaseYear() const;
-
-    void setTitle(const string& newTitle);
-    void setPlot(const string& newPlot);
+    std::string getTitle() const;
+    void setTitle(const std::string& newTitle);
+    void setPlot(const std::string& newPlot);
     void setReleaseYear(int newYear);
 
+    ActorList& getActors();                 // Non-const version
+    const ActorList& getActors() const;      // Const version
+
+    int getReleaseYear() const;
     void addActor(const Actor& actor);
     void displayDetails() const;
-    bool findActorById(int actorId) const;
-
 };
 
 #endif

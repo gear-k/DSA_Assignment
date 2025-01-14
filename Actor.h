@@ -7,14 +7,16 @@ using namespace std;
 
 class Actor {
 private:
-    int id; // Actor's unique ID
-    string name;
-    int yearOfBirth;
-    int age;
+    int id; // Unique Actor ID
+    string name; // Actor's name
+    int yearOfBirth; // Year of birth
+    int age; // Calculated age
 
 public:
+    Actor() = default; // Default constructor
     Actor(const string& name, int yearOfBirth, int id);
 
+    // Getter and setter functions
     int getId() const;
     void setId(int newId);
 
@@ -25,7 +27,7 @@ public:
     void setName(const string& newName);
     void setYearOfBirth(int newYearOfBirth);
 
-    void displayDetails() const;
+    void displayDetails() const; // Display actor details
 };
 
 #endif

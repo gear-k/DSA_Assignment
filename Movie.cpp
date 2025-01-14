@@ -1,42 +1,23 @@
 #include "Movie.h"
 #include <iostream>
 
-// Constructor implementation in Movie.cpp
-Movie::Movie(const string& title, const string& plot, int releaseYear, int id)
-    : id(id), title(title), plot(plot), releaseYear(releaseYear) {}
+Movie::Movie(const std::string& title, const std::string& plot, int releaseYear, int id)
+    : id(id), title(title), plot(plot), releaseYear(releaseYear) {
+}
 
 int Movie::getId() const {
     return id;
 }
 
-void Movie::setId(int newId) {
-    id = newId;
-}
-
-string Movie::getTitle() const {
+std::string Movie::getTitle() const {
     return title;
 }
 
-string Movie::getPlot() const {
-    return plot;
-}
-
-int Movie::getReleaseYear() const {
-    return releaseYear;
-}
-
-void Movie::setTitle(const string& newTitle) {
+void Movie::setTitle(const std::string& newTitle) {
     title = newTitle;
 }
 
-// Non-const version of getActors
-ActorList& Movie::getActors() { return actors; }
-
-// Const version of getActors
-const ActorList& Movie::getActors() const { return actors; }
-
-
-void Movie::setPlot(const string& newPlot) {
+void Movie::setPlot(const std::string& newPlot) {
     plot = newPlot;
 }
 
@@ -44,14 +25,25 @@ void Movie::setReleaseYear(int newYear) {
     releaseYear = newYear;
 }
 
+ActorList& Movie::getActors() {
+    return actors;  // Non-const version
+}
+
+const ActorList& Movie::getActors() const {
+    return actors;  // Const version
+}
+
+int Movie::getReleaseYear() const {
+    return releaseYear;
+}
+
 void Movie::addActor(const Actor& actor) {
     actors.add(actor);
 }
 
 void Movie::displayDetails() const {
-    cout << "Movie ID: " << id << ", Title: " << title << ", Release Year: " << releaseYear << endl;
-    cout << "Actors in this movie:" << endl;
+    std::cout << "Movie ID: " << id << ", Title: " << title
+        << ", Release Year: " << releaseYear << std::endl;
+    std::cout << "Actors in this movie:" << std::endl;
     actors.displayAll();
 }
-
-

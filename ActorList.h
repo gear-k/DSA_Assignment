@@ -1,4 +1,3 @@
-// ActorList.h
 #ifndef ACTORLIST_H
 #define ACTORLIST_H
 
@@ -13,30 +12,24 @@ private:
     Node* head;
     int size;
 
+    // Moved to private and made accessible within the class
+    Node* mergeSortedLists(Node* left, Node* right);
+    Node* mergeSort(Node* node);
+
 public:
     ActorList();
     ~ActorList();
     bool add(const Actor& actor);
     bool remove(int index);
-    // Non-const version
+    Actor* findById(int id);
     Actor* get(int index);
-
-    // Const version (called if 'this' is const)
     const Actor* get(int index) const;
 
     int getLength() const;
     bool isEmpty() const;
     void displayAll() const;
-    Actor* findById(int id);
 
-    // Add this:
-    void sortByName();               // <--- New function
-
-    // Utility to check if an actor with given ID already in list
-    bool containsId(int actorId) const;  // <--- For avoiding duplicates
-
-    // Utility to check if an actor with given name is in the list
-    bool containsName(const std::string& actorName) const; // optional helper
+    void sortByName(); // Sort actors by name
 };
 
 #endif

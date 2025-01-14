@@ -4,21 +4,21 @@
 MovieList::MovieList() : head(nullptr), size(0) {}
 
 MovieList::~MovieList() {
-    while (!isEmpty()) {
-        remove(1);
+    while (head) {
+        Node* temp = head;
+        head = head->next;
+        delete temp;
     }
 }
 
 bool MovieList::add(const Movie& movie) {
     Node* newNode = new Node{ movie, nullptr };
-    if (size == 0) {
+    if (!head) {
         head = newNode;
     }
     else {
         Node* temp = head;
-        while (temp->next != nullptr) {
-            temp = temp->next;
-        }
+        while (temp->next) temp = temp->next;
         temp->next = newNode;
     }
     size++;
@@ -28,92 +28,100 @@ bool MovieList::add(const Movie& movie) {
 bool MovieList::remove(int index) {
     if (index < 1 || index > size) return false;
     Node* temp = head;
+
     if (index == 1) {
         head = head->next;
     }
     else {
         Node* prev = nullptr;
-        for (int i = 1; i < index; i++) {
+        for (int i = 1; i < index; ++i) {
             prev = temp;
             temp = temp->next;
         }
         prev->next = temp->next;
     }
+
     delete temp;
     size--;
     return true;
 }
 
+Movie* MovieList::findById(int id) {
+    Node* temp = head;
+    while (temp) {
+        if (temp->movie.getId() == id) return &temp->movie;
+        temp = temp->next;
+    }
+    return nullptr;
+}
+
 Movie* MovieList::get(int index) {
     if (index < 1 || index > size) return nullptr;
     Node* temp = head;
-    for (int i = 1; i < index; i++) {
+    for (int i = 1; i < index; ++i) {
         temp = temp->next;
     }
-    return &temp->movie; // pointer to *mutable* Movie
+    return &temp->movie;
 }
 
 const Movie* MovieList::get(int index) const {
     if (index < 1 || index > size) return nullptr;
     Node* temp = head;
-    for (int i = 1; i < index; i++) {
+    for (int i = 1; i < index; ++i) {
         temp = temp->next;
     }
-    return &temp->movie; // pointer to *const* Movie
+    return &temp->movie;
 }
-
 
 int MovieList::getLength() const {
     return size;
 }
 
 bool MovieList::isEmpty() const {
-    return (size == 0);
+    return size == 0;
 }
 
 void MovieList::displayAll() const {
     Node* temp = head;
-    while (temp != nullptr) {
+    while (temp) {
         temp->movie.displayDetails();
         temp = temp->next;
     }
 }
 
-Movie* MovieList::findById(int id) {
-    Node* current = head;
-    while (current != nullptr) {
-        if (current->movie.getId() == id) {
-            return &current->movie;
-        }
-        current = current->next;
+MovieList::Node* MovieList::mergeSortedLists(Node* left, Node* right) {
+    if (!left) return right;
+    if (!right) return left;
+
+    if (left->movie.getTitle() < right->movie.getTitle()) {
+        left->next = mergeSortedLists(left->next, right);
+        return left;
     }
-    return nullptr;
+    else {
+        right->next = mergeSortedLists(left, right->next);
+        return right;
+    }
 }
 
-// -------------------- NEW CODE --------------------
+MovieList::Node* MovieList::mergeSort(Node* node) {
+    if (!node || !node->next) return node;
 
-// Sort movies by title (ascending) using bubble sort on linked list
+    Node* slow = node;
+    Node* fast = node->next;
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+
+    Node* mid = slow->next;
+    slow->next = nullptr;
+
+    Node* left = mergeSort(node);
+    Node* right = mergeSort(mid);
+
+    return mergeSortedLists(left, right);
+}
+
 void MovieList::sortByTitle() {
-    if (!head || !head->next) {
-        // 0 or 1 node, nothing to sort
-        return;
-    }
-
-    bool swapped;
-    do {
-        swapped = false;
-        Node* current = head;
-        while (current->next != nullptr) {
-            if (current->movie.getTitle() > current->next->movie.getTitle()) {
-                // swap the movie objects
-                Movie temp = current->movie;
-                current->movie = current->next->movie;
-                current->next->movie = temp;
-                swapped = true;
-            }
-            current = current->next;
-        }
-    } while (swapped);
+    head = mergeSort(head);
 }
-
-

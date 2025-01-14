@@ -12,27 +12,22 @@ private:
     Node* head;
     int size;
 
+    Node* mergeSortedLists(Node* left, Node* right);
+    Node* mergeSort(Node* node);
+
 public:
     MovieList();
     ~MovieList();
     bool add(const Movie& movie);
     bool remove(int index);
-    // Non-const version
-    Movie* get(int index);
-
-    // Const version
-    const Movie* get(int index) const;
+    Movie* findById(int id);
+    Movie* get(int index);               // Non-const version
+    const Movie* get(int index) const;   // Const version
 
     int getLength() const;
     bool isEmpty() const;
     void displayAll() const;
-    Movie* findById(int id);
-
-
-
-    // --- NEW METHOD ---
-    // Sort the list of movies by title (ascending)
-    void sortByTitle();
+    void sortByTitle(); // Sort movies by title
 };
 
 #endif
