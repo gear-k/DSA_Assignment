@@ -44,14 +44,25 @@ bool ActorList::remove(int index) {
     return true;
 }
 
+
 Actor* ActorList::get(int index) {
     if (index < 1 || index > size) return nullptr;
     Node* temp = head;
     for (int i = 1; i < index; i++) {
         temp = temp->next;
     }
-    return &temp->actor;
+    return &temp->actor; // pointer to *mutable* Actor
 }
+
+const Actor* ActorList::get(int index) const {
+    if (index < 1 || index > size) return nullptr;
+    Node* temp = head;
+    for (int i = 1; i < index; i++) {
+        temp = temp->next;
+    }
+    return &temp->actor; // pointer to *const* Actor
+}
+
 
 int ActorList::getLength() const {
     return size;
@@ -71,7 +82,7 @@ void ActorList::displayAll() const {
 
 Actor* ActorList::findById(int id) {
     Node* current = head;
-    while (current) {
+    while (current != nullptr) {
         if (current->actor.getId() == id) {
             return &current->actor;
         }
@@ -80,3 +91,40 @@ Actor* ActorList::findById(int id) {
     return nullptr;
 }
 
+// -------------------- NEW CODE --------------------
+
+// Sort actors by name (ascending) using bubble sort on linked list
+void ActorList::sortByName() {
+    if (!head || !head->next) {
+        // 0 or 1 node, nothing to sort
+        return;
+    }
+
+    bool swapped;
+    do {
+        swapped = false;
+        Node* current = head;
+        while (current->next != nullptr) {
+            if (current->actor.getName() > current->next->actor.getName()) {
+                // swap the actor objects
+                Actor temp = current->actor;
+                current->actor = current->next->actor;
+                current->next->actor = temp;
+                swapped = true;
+            }
+            current = current->next;
+        }
+    } while (swapped);
+}
+
+// Check if the list already contains an actor with a given ID
+bool ActorList::containsId(int actorId) const {
+    Node* current = head;
+    while (current != nullptr) {
+        if (current->actor.getId() == actorId) {
+            return true;
+        }
+        current = current->next;
+    }
+    return false;
+}

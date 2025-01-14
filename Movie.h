@@ -18,6 +18,9 @@ public:
 
     int getId() const;
     void setId(int newId);
+    ActorList& getActors();           // Declaration of non-const version
+    const ActorList& getActors() const; // Declaration of const version
+
 
     string getTitle() const;
     string getPlot() const;
@@ -29,6 +32,8 @@ public:
 
     void addActor(const Actor& actor);
     void displayDetails() const;
+    bool findActorById(int actorId) const;
+
 };
 
 #endif

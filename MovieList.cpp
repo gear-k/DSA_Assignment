@@ -50,15 +50,25 @@ Movie* MovieList::get(int index) {
     for (int i = 1; i < index; i++) {
         temp = temp->next;
     }
-    return &temp->movie;
+    return &temp->movie; // pointer to *mutable* Movie
 }
+
+const Movie* MovieList::get(int index) const {
+    if (index < 1 || index > size) return nullptr;
+    Node* temp = head;
+    for (int i = 1; i < index; i++) {
+        temp = temp->next;
+    }
+    return &temp->movie; // pointer to *const* Movie
+}
+
 
 int MovieList::getLength() const {
     return size;
 }
 
 bool MovieList::isEmpty() const {
-    return size == 0;
+    return (size == 0);
 }
 
 void MovieList::displayAll() const {
@@ -71,7 +81,7 @@ void MovieList::displayAll() const {
 
 Movie* MovieList::findById(int id) {
     Node* current = head;
-    while (current) {
+    while (current != nullptr) {
         if (current->movie.getId() == id) {
             return &current->movie;
         }
@@ -79,3 +89,31 @@ Movie* MovieList::findById(int id) {
     }
     return nullptr;
 }
+
+// -------------------- NEW CODE --------------------
+
+// Sort movies by title (ascending) using bubble sort on linked list
+void MovieList::sortByTitle() {
+    if (!head || !head->next) {
+        // 0 or 1 node, nothing to sort
+        return;
+    }
+
+    bool swapped;
+    do {
+        swapped = false;
+        Node* current = head;
+        while (current->next != nullptr) {
+            if (current->movie.getTitle() > current->next->movie.getTitle()) {
+                // swap the movie objects
+                Movie temp = current->movie;
+                current->movie = current->next->movie;
+                current->next->movie = temp;
+                swapped = true;
+            }
+            current = current->next;
+        }
+    } while (swapped);
+}
+
+

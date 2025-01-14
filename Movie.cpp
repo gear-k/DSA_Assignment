@@ -29,6 +29,13 @@ void Movie::setTitle(const string& newTitle) {
     title = newTitle;
 }
 
+// Non-const version of getActors
+ActorList& Movie::getActors() { return actors; }
+
+// Const version of getActors
+const ActorList& Movie::getActors() const { return actors; }
+
+
 void Movie::setPlot(const string& newPlot) {
     plot = newPlot;
 }
@@ -46,3 +53,5 @@ void Movie::displayDetails() const {
     cout << "Actors in this movie:" << endl;
     actors.displayAll();
 }
+
+
