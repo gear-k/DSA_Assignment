@@ -128,18 +128,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Actor.cpp" />
-    <ClCompile Include="ActorList.cpp" />
     <ClCompile Include="DSA_Assignment.cpp" />
     <ClCompile Include="Movie.cpp" />
     <ClCompile Include="MovieApp.cpp" />
-    <ClCompile Include="MovieList.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Actor.h" />
-    <ClInclude Include="ActorList.h" />
+    <ClInclude Include="List.h" />
     <ClInclude Include="Movie.h" />
     <ClInclude Include="MovieApp.h" />
-    <ClInclude Include="MovieList.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="actors.csv" />

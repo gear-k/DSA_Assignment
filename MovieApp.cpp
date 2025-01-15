@@ -2,408 +2,383 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <algorithm> // For std::transform
-#include <cctype>    // For std::tolower
-#include <ctime>     // For getting the current year
+#include <algorithm>
 using namespace std;
 
-// Utility function to trim whitespace
-void trimString(std::string& str) {
-    while (!str.empty() && isspace(str.front())) {
-        str.erase(0, 1);
-    }
-    while (!str.empty() && isspace(str.back())) {
-        str.pop_back();
-    }
+MovieApp::MovieApp()
+    : nextActorId(1000), // or pick any starting ID
+    nextMovieId(5000)
+{
 }
 
-// Utility function to clean CSV field data
-std::string cleanCSVField(const std::string& field) {
-    std::string cleaned = field;
+//------------------------------------------------------------------------------
+// 1) CSV Reading
+//------------------------------------------------------------------------------
 
-    // Remove semicolons
-    cleaned.erase(std::remove(cleaned.begin(), cleaned.end(), ';'), cleaned.end());
+// Trims leading and trailing whitespace and quotes
+std::string trimQuotes(const std::string& str) {
+    size_t start = str.find_first_not_of(" \"");
+    size_t end = str.find_last_not_of(" \"");
 
-    // Remove quotes if they exist at start and end
-    if (cleaned.size() >= 2 && cleaned.front() == '"' && cleaned.back() == '"') {
-        cleaned = cleaned.substr(1, cleaned.size() - 2);
+    if (start == std::string::npos || end == std::string::npos) {
+        return ""; // Return empty string if all characters are whitespace or quotes
     }
-
-    // Remove any \r characters (carriage returns)
-    cleaned.erase(std::remove(cleaned.begin(), cleaned.end(), '\r'), cleaned.end());
-
-    // Trim whitespace
-    trimString(cleaned);
-
-    return cleaned;
+    return str.substr(start, end - start + 1);
 }
 
-// Utility function to convert string to lowercase
-std::string toLowerCase(const std::string& str) {
-    std::string lowerStr = str;
-    std::transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(),
-        [](unsigned char c) { return std::tolower(c); });
-    return lowerStr;
-}
 
-// Add New Actor
-void MovieApp::addNewActor(const std::string& name, int yearOfBirth) {
-    static int nextActorId = 1;  // Ensure unique IDs
-    Actor newActor(name, yearOfBirth, nextActorId++);
-    actorList.add(newActor);
-    cout << "Actor added successfully!\n";
-}
-
-// Add New Movie
-void MovieApp::addNewMovie(const std::string& title, const std::string& plot, int releaseYear) {
-    static int nextMovieId = 1;  // Ensure unique IDs
-    Movie newMovie(title, plot, releaseYear, nextMovieId++);
-    movieList.add(newMovie);
-    cout << "Movie added successfully!\n";
-}
-
-// Add Actor to Movie
-void MovieApp::addActorToMovie(const std::string& actorName, const std::string& movieTitle) {
-    std::string trimmedActorName = actorName, trimmedMovieTitle = movieTitle;
-    trimString(trimmedActorName);
-    trimString(trimmedMovieTitle);
-    trimmedActorName = toLowerCase(trimmedActorName);
-    trimmedMovieTitle = toLowerCase(trimmedMovieTitle);
-
-    Actor* actor = nullptr;
-    for (int i = 1; i <= actorList.getLength(); ++i) {
-        if (toLowerCase(actorList.get(i)->getName()) == trimmedActorName) {
-            actor = actorList.get(i);
-            break;
-        }
-    }
-
-    Movie* movie = nullptr;
-    for (int i = 1; i <= movieList.getLength(); ++i) {
-        if (toLowerCase(movieList.get(i)->getTitle()) == trimmedMovieTitle) {
-            movie = movieList.get(i);
-            break;
-        }
-    }
-
-    if (actor && movie) {
-        movie->addActor(*actor);
-        cout << "Actor added to movie successfully!\n";
-    }
-    else {
-        cout << "Error: Actor or Movie not found!\n";
-    }
-}
-
-// Update Actor Details
-void MovieApp::updateActorDetails(int id, const std::string& newName, int newYearOfBirth) {
-    Actor* actor = actorList.findById(id);
-    if (actor) {
-        actor->setName(newName);
-        actor->setYearOfBirth(newYearOfBirth);
-        cout << "Actor details updated successfully!\n";
-    }
-    else {
-        cout << "Error: Actor ID not found.\n";
-    }
-}
-
-// Update Movie Details
-void MovieApp::updateMovieDetails(int id, const std::string& newTitle, const std::string& newPlot, int newReleaseYear) {
-    Movie* movie = movieList.findById(id);
-    if (movie) {
-        movie->setTitle(newTitle);
-        movie->setPlot(newPlot);
-        movie->setReleaseYear(newReleaseYear);
-        cout << "Movie details updated successfully!\n";
-    }
-    else {
-        cout << "Error: Movie ID not found.\n";
-    }
-}
-
-// Modified readActors function
-void MovieApp::readActors(const string& fileName) {
-    ifstream file(fileName);
-    if (!file.is_open()) {
-        cerr << "Error opening file: " << fileName << endl;
+void MovieApp::readActors(const std::string& filename) {
+    std::ifstream fin(filename);
+    if (!fin.is_open()) {
+        std::cerr << "Error: Could not open file \"" << filename << "\"\n";
         return;
     }
 
-    string line;
-    getline(file, line);  // Skip header
-    while (getline(file, line)) {
-        stringstream ss(line);
-        string idStr, name, birthStr;
-        int id, yearOfBirth;
+    std::string header;
+    getline(fin, header); // Skip header line
+
+    std::string line;
+    while (getline(fin, line)) {
+        if (line.empty()) continue;
+
+        std::stringstream ss(line);
+        std::string idStr, name, birthStr;
 
         getline(ss, idStr, ',');
         getline(ss, name, ',');
-        getline(ss, birthStr);
+        getline(ss, birthStr, ',');
 
-        // Clean the fields
-        idStr = cleanCSVField(idStr);
-        name = cleanCSVField(name);
-        birthStr = cleanCSVField(birthStr);
+        int id = std::stoi(idStr);
+        int birth = std::stoi(birthStr);
 
-        try {
-            id = stoi(idStr);
-            yearOfBirth = stoi(birthStr);
+        // Trim quotes from the name
+        name = trimQuotes(name);
 
-            actorList.add(Actor(name, yearOfBirth, id));
-        }
-        catch (const std::exception& e) {
-            cerr << "Error processing line: " << line << "\nError: " << e.what() << endl;
-            continue;
+        // Add the actor
+        Actor actor(name, birth, id);
+        actorList.add(actor);
+
+        // Update the next available ID
+        if (id >= nextActorId) {
+            nextActorId = id + 1;
         }
     }
-    file.close();
+
+    fin.close();
 }
 
-// Modified readMovies function
-void MovieApp::readMovies(const string& fileName) {
-    ifstream file(fileName);
-    if (!file.is_open()) {
-        cerr << "Error opening file: " << fileName << endl;
+
+void MovieApp::readMovies(const std::string& filename) {
+    std::ifstream fin(filename);
+    if (!fin.is_open()) {
+        std::cerr << "Error: Could not open file \"" << filename << "\"\n";
         return;
     }
 
-    string line;
-    getline(file, line);  // Skip header
-    while (getline(file, line)) {
-        stringstream ss(line);
-        string idStr, title, yearStr;
-        int id, releaseYear;
+    std::string header;
+    getline(fin, header); // Skip header line
+
+    std::string line;
+    while (getline(fin, line)) {
+        if (line.empty()) continue;
+
+        std::stringstream ss(line);
+        std::string idStr, title, yearStr;
 
         getline(ss, idStr, ',');
         getline(ss, title, ',');
-        getline(ss, yearStr);
+        getline(ss, yearStr, ',');
 
-        // Clean the fields
-        idStr = cleanCSVField(idStr);
-        title = cleanCSVField(title);
-        yearStr = cleanCSVField(yearStr);
+        int id = std::stoi(idStr);
+        int year = std::stoi(yearStr);
 
-        try {
-            id = stoi(idStr);
-            releaseYear = stoi(yearStr);
+        // Trim quotes from the title
+        title = trimQuotes(title);
 
-            movieList.add(Movie(title, "", releaseYear, id));
-        }
-        catch (const std::exception& e) {
-            cerr << "Error processing line: " << line << "\nError: " << e.what() << endl;
-            continue;
+        // Add the movie
+        Movie movie(title, "", year, id); // Plot is empty in the CSV
+        movieList.add(movie);
+
+        // Update the next available ID
+        if (id >= nextMovieId) {
+            nextMovieId = id + 1;
         }
     }
-    file.close();
+
+    fin.close();
 }
 
-// Modified readCast function
-void MovieApp::readCast(const string& fileName) {
-    ifstream file(fileName);
-    if (!file.is_open()) {
-        cerr << "Error opening file: " << fileName << endl;
+void MovieApp::readCast(const std::string& filename) {
+    // This CSV: person_id,movie_id
+    // We want to find the actor with that person_id, the movie with movie_id, and associate them.
+    ifstream fin(filename);
+    if (!fin.is_open()) {
+        cerr << "Error: Could not open file \"" << filename << "\"\n";
         return;
     }
+    // Skip header line: "person_id,movie_id"
+    string header;
+    getline(fin, header);
 
     string line;
-    getline(file, line);  // Skip header
-    while (getline(file, line)) {
+    while (getline(fin, line)) {
+        if (line.empty()) continue;
         stringstream ss(line);
-        string actorIdStr, movieIdStr;
-        int actorId, movieId;
+        string personIdStr, movieIdStr;
+        getline(ss, personIdStr, ',');
+        getline(ss, movieIdStr, ',');
 
-        getline(ss, actorIdStr, ',');
-        getline(ss, movieIdStr);
-
-        // Clean the fields
-        actorIdStr = cleanCSVField(actorIdStr);
-        movieIdStr = cleanCSVField(movieIdStr);
-
-        try {
-            actorId = stoi(actorIdStr);
-            movieId = stoi(movieIdStr);
-
-            Actor* actor = actorList.findById(actorId);
-            Movie* movie = movieList.findById(movieId);
-
-            if (actor && movie) {
-                movie->addActor(*actor);
-            }
-        }
-        catch (const std::exception& e) {
-            cerr << "Error processing line: " << line << "\nError: " << e.what() << endl;
+        if (personIdStr.empty() || movieIdStr.empty()) {
             continue;
         }
+        int personId = stoi(personIdStr);
+        int movieId = stoi(movieIdStr);
+
+        // Find the actor object by ID
+        Actor* foundActor = nullptr;
+        actorList.display([&](Actor& a) {
+            if (a.getId() == personId) {
+                foundActor = &a;
+                return true; // break
+            }
+            return false;
+            });
+
+        // Find the movie object by ID
+        Movie* foundMovie = nullptr;
+        movieList.display([&](Movie& m) {
+            if (m.getId() == movieId) {
+                foundMovie = &m;
+                return true;
+            }
+            return false;
+            });
+
+        if (foundActor && foundMovie) {
+            foundMovie->addActor(*foundActor);
+        }
     }
-    file.close();
+    fin.close();
 }
 
-// Display All Actors
+//------------------------------------------------------------------------------
+// 2) "Add New" items
+//------------------------------------------------------------------------------
+
+void MovieApp::addNewActor(const std::string& name, int birthYear) {
+    Actor actor(name, birthYear, nextActorId);
+    ++nextActorId;
+    actorList.add(actor);
+    cout << "Added new actor: \"" << name << "\" (ID=" << actor.getId() << ")\n";
+}
+
+void MovieApp::addNewMovie(const std::string& title, const std::string& plot, int releaseYear) {
+    Movie movie(title, plot, releaseYear, nextMovieId);
+    ++nextMovieId;
+    movieList.add(movie);
+    cout << "Added new movie: \"" << title << "\" (ID=" << movie.getId() << ")\n";
+}
+
+//------------------------------------------------------------------------------
+// 3) Link actors & movies
+//------------------------------------------------------------------------------
+
+void MovieApp::addActorToMovie(const std::string& actorName, const std::string& movieTitle) {
+    Movie* targetMovie = nullptr;
+    movieList.display([&](Movie& m) {
+        if (m.getTitle() == movieTitle) {
+            targetMovie = &m;
+            return true; // break
+        }
+        return false;
+        });
+
+    if (!targetMovie) {
+        cout << "[Error] Movie \"" << movieTitle << "\" not found.\n";
+        return;
+    }
+
+    Actor* targetActor = nullptr;
+    actorList.display([&](Actor& a) {
+        if (a.getName() == actorName) {
+            targetActor = &a;
+            return true; // break
+        }
+        return false;
+        });
+
+    if (!targetActor) {
+        cout << "[Error] Actor \"" << actorName << "\" not found.\n";
+        return;
+    }
+
+    // Add the Actor to the Movie
+    targetMovie->addActor(*targetActor);
+    cout << "Actor \"" << actorName << "\" added to movie \"" << movieTitle << "\"\n";
+}
+
+//------------------------------------------------------------------------------
+// 4) Update actor/movie
+//------------------------------------------------------------------------------
+
+void MovieApp::updateActorDetails(int actorId, const std::string& newName, int newYearOfBirth) {
+    bool found = false;
+    actorList.display([&](Actor& a) {
+        if (a.getId() == actorId) {
+            a.setName(newName);
+            a.setBirthYear(newYearOfBirth);
+            cout << "Updated Actor ID " << actorId
+                << " => Name: " << newName
+                << ", BirthYear: " << newYearOfBirth << endl;
+            found = true;
+            return true; // break
+        }
+        return false;
+        });
+    if (!found) {
+        cout << "[Error] Actor ID " << actorId << " not found.\n";
+    }
+}
+
+void MovieApp::updateMovieDetails(int movieId, const std::string& newTitle, const std::string& newPlot, int newReleaseYear) {
+    bool found = false;
+    movieList.display([&](Movie& m) {
+        if (m.getId() == movieId) {
+            m.setTitle(newTitle);
+            m.setPlot(newPlot);
+            m.setReleaseYear(newReleaseYear);
+            cout << "Updated Movie ID " << movieId
+                << " => Title: " << newTitle
+                << ", Plot: " << newPlot
+                << ", Year: " << newReleaseYear << endl;
+            found = true;
+            return true; // break
+        }
+        return false;
+        });
+    if (!found) {
+        cout << "[Error] Movie ID " << movieId << " not found.\n";
+    }
+}
+
+//------------------------------------------------------------------------------
+// 5) Display
+//------------------------------------------------------------------------------
+
 void MovieApp::displayAllActors() const {
-    actorList.displayAll();
+    if (actorList.isEmpty()) {
+        std::cout << "No actors found.\n";
+        return;
+    }
+    actorList.display([](const Actor& actor) {
+        actor.displayDetails();
+        return false; // Continue displaying
+        });
 }
 
-// Display All Movies
+
 void MovieApp::displayAllMovies() const {
-    movieList.displayAll();
-}
-
-// Display Movies of an Actor
-void MovieApp::displayMoviesOfActor(const std::string& actorName) const {
-    std::string trimmedActorName = actorName;
-    trimString(trimmedActorName);
-    trimmedActorName = toLowerCase(trimmedActorName);
-
-    const Actor* actor = nullptr;
-    for (int i = 1; i <= actorList.getLength(); i++) {
-        const Actor* temp = actorList.get(i);
-        if (toLowerCase(temp->getName()) == trimmedActorName) {
-            actor = temp;
-            break;
-        }
-    }
-
-    if (!actor) {
-        std::cout << "Error: Actor \"" << actorName << "\" not found.\n";
+    if (movieList.isEmpty()) {
+        std::cout << "No movies found.\n";
         return;
     }
-
-    std::cout << "\nMovies starring " << actorName << ":\n";
-    bool found = false;
-    for (int i = 1; i <= movieList.getLength(); i++) {
-        const Movie* movie = movieList.get(i);
-        if (!movie) continue;
-        const ActorList& cast = movie->getActors();
-        for (int j = 1; j <= cast.getLength(); j++) {
-            const Actor* castActor = cast.get(j);
-            if (castActor->getId() == actor->getId()) {
-                std::cout << movie->getTitle() << std::endl;
-                found = true;
-                break;
-            }
-        }
-    }
-
-    if (!found) {
-        std::cout << "No movies found for actor \"" << actorName << "\".\n";
-    }
+    movieList.display([](const Movie& movie) {
+        movie.displayDetails();
+        return false; // Continue displaying
+        });
 }
 
-// Display Actors in a Movie
-void MovieApp::displayActorsInMovie(const std::string& movieTitle) const {
-    std::string trimmedMovieTitle = movieTitle;
-    trimString(trimmedMovieTitle);
-    trimmedMovieTitle = toLowerCase(trimmedMovieTitle);
 
-    const Movie* movie = nullptr;
-    for (int i = 1; i <= movieList.getLength(); ++i) {
-        const Movie* temp = movieList.get(i);
-        if (toLowerCase(temp->getTitle()) == trimmedMovieTitle) {
-            movie = temp;
-            break;
-        }
-    }
-
-    if (!movie) {
-        std::cout << "Error: Movie \"" << movieTitle << "\" not found.\n";
-        return;
-    }
-
-    std::cout << "\nActors in \"" << movieTitle << "\":\n";
-    if (movie->getActors().getLength() == 0) {
-        std::cout << "No actors found in the movie \"" << movieTitle << "\".\n";
-    }
-    else {
-        movie->getActors().displayAll();
-    }
-}
-
-// Display Actors Known by an Actor
-void MovieApp::displayActorsKnownBy(const std::string& actorName) const {
-    std::string trimmedActorName = actorName;
-    trimString(trimmedActorName);
-    trimmedActorName = toLowerCase(trimmedActorName);
-
-    const Actor* actor = nullptr;
-    for (int i = 1; i <= actorList.getLength(); ++i) {
-        const Actor* temp = actorList.get(i);
-        if (toLowerCase(temp->getName()) == trimmedActorName) {
-            actor = temp;
-            break;
-        }
-    }
-
-    if (!actor) {
-        std::cout << "Error: Actor \"" << actorName << "\" not found.\n";
-        return;
-    }
-
-    ActorList knownActors;
-
-    for (int i = 1; i <= movieList.getLength(); ++i) {
-        const Movie* movie = movieList.get(i);
-        if (!movie) continue;
-
-        bool inMovie = false;
-        const ActorList& cast = movie->getActors();
-        for (int j = 1; j <= cast.getLength(); ++j) {
-            const Actor* castActor = cast.get(j);
-            if (castActor->getId() == actor->getId()) {
-                inMovie = true;
-                break;
-            }
-        }
-
-        if (inMovie) {
-            for (int j = 1; j <= cast.getLength(); ++j) {
-                const Actor* coActor = cast.get(j);
-                if (coActor && coActor->getId() != actor->getId() &&
-                    !knownActors.findById(coActor->getId())) {
-                    knownActors.add(*coActor);
-                }
-            }
-        }
-    }
-
-    std::cout << "\nActors known by " << actorName << ":\n";
-    knownActors.displayAll();
-}
-
-// Display Actors by Age Range
 void MovieApp::displayActorsByAge(int minAge, int maxAge) const {
-    cout << "Actors between age " << minAge << " and " << maxAge << ":\n";
-    bool found = false;
-    for (int i = 1; i <= actorList.getLength(); ++i) {
-        const Actor* actor = actorList.get(i);
-        if (actor && actor->getAge() >= minAge && actor->getAge() <= maxAge) {
-            actor->displayDetails();
-            found = true;
+    bool anyFound = false;
+    actorList.display([&](const Actor& a) {
+        int age = a.getAge();
+        if (age >= minAge && age <= maxAge) {
+            cout << a.getName() << " (Age=" << age << ")\n";
+            anyFound = true;
         }
-    }
-    if (!found) {
-        cout << "No actors found in the specified age range.\n";
+        return false;
+        });
+    if (!anyFound) {
+        cout << "No actors found in age range [" << minAge << ", " << maxAge << "].\n";
     }
 }
 
-// Display Recent Movies (last 3 years)
 void MovieApp::displayRecentMovies() const {
-    time_t now = time(0);
-    tm localTimeStruct;
-    localtime_s(&localTimeStruct, &now);
-    int currentYear = 1900 + localTimeStruct.tm_year;
-    int recentThreshold = currentYear - 3;
-
-    cout << "Movies released in the last 3 years:\n";
-    bool found = false;
-    for (int i = 1; i <= movieList.getLength(); ++i) {
-        const Movie* movie = movieList.get(i);
-        if (movie && movie->getReleaseYear() >= recentThreshold) {
-            movie->displayDetails();
-            found = true;
+    // "last 3 years" means releaseYear >= 2025 - 3 => 2022
+    const int cutoff = 2025 - 3;
+    bool anyFound = false;
+    movieList.display([&](const Movie& m) {
+        if (m.getReleaseYear() >= cutoff) {
+            cout << m.getTitle() << " (" << m.getReleaseYear() << ")\n";
+            anyFound = true;
         }
+        return false;
+        });
+    if (!anyFound) {
+        cout << "No movies found released in the last 3 years.\n";
     }
-    if (!found) {
-        cout << "No recent movies found.\n";
+}
+
+void MovieApp::displayMoviesOfActor(const std::string& actorName) const {
+    bool anyFound = false;
+    movieList.display([&](const Movie& m) {
+        if (m.hasActor(actorName)) {
+            cout << m.getTitle() << " (" << m.getReleaseYear() << ")\n";
+            anyFound = true;
+        }
+        return false;
+        });
+    if (!anyFound) {
+        cout << "No movies found for actor \"" << actorName << "\".\n";
     }
+}
+
+void MovieApp::displayActorsInMovie(const std::string& movieTitle) const {
+    bool foundMovie = false;
+    movieList.display([&](const Movie& m) {
+        if (m.getTitle() == movieTitle) {
+            foundMovie = true;
+            cout << "Actors in \"" << movieTitle << "\":\n";
+            // Just display them
+            m.getActors().display();
+            return true; // break
+        }
+        return false;
+        });
+    if (!foundMovie) {
+        cout << "Movie \"" << movieTitle << "\" not found.\n";
+    }
+}
+
+void MovieApp::displayActorsKnownBy(const std::string& actorName) const {
+    // We'll gather all distinct actors that share a movie with `actorName`
+    List<std::string> knownNames; // store actor names
+
+    // For each movie, if it has `actorName`, add other cast members
+    movieList.display([&](const Movie& m) {
+        if (m.hasActor(actorName)) {
+            // Add all other actors
+            m.getActors().display([&](const Actor& a) {
+                if (a.getName() != actorName) {
+                    // Check if already in knownNames
+                    bool alreadyExists = false;
+                    knownNames.display([&](const std::string& existing) {
+                        if (existing == a.getName()) {
+                            alreadyExists = true;
+                            return true; // break
+                        }
+                        return false;
+                        });
+                    if (!alreadyExists) {
+                        // Add and also print
+                        knownNames.add(a.getName());
+                        cout << a.getName() << endl;
+                    }
+                }
+                return false;
+                });
+        }
+        return false;
+        });
 }

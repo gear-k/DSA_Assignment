@@ -3,31 +3,44 @@
 
 #include <string>
 #include <iostream>
-using namespace std;
 
 class Actor {
 private:
-    int id; // Unique Actor ID
-    string name; // Actor's name
-    int yearOfBirth; // Year of birth
-    int age; // Calculated age
+    int id;
+    std::string name;
+    int birthYear;
+    int age; // for convenience
 
 public:
-    Actor() = default; // Default constructor
-    Actor(const string& name, int yearOfBirth, int id);
+    Actor() : id(0), birthYear(0), age(0) {}
+    Actor(const std::string& name, int birthYear, int id);
 
-    // Getter and setter functions
     int getId() const;
     void setId(int newId);
 
-    string getName() const;
-    int getYearOfBirth() const;
+    std::string getName() const;
+    void setName(const std::string& newName);
+
+    int getBirthYear() const;
+    void setBirthYear(int newYearOfBirth);
+
     int getAge() const;
 
-    void setName(const string& newName);
-    void setYearOfBirth(int newYearOfBirth);
+    void displayDetails() const;
 
-    void displayDetails() const; // Display actor details
+    // For storing in List<Actor>, we need an equality check
+    bool operator==(const Actor& other) const {
+        return (this->id == other.id);
+    }
+
+    // So that List<Actor>::display() can do std::cout << actor
+    friend std::ostream& operator<<(std::ostream& os, const Actor& actor) {
+        os << "[Actor ID=" << actor.id
+            << ", Name=\"" << actor.name
+            << "\", BirthYear=" << actor.birthYear
+            << ", Age=" << actor.age << "]";
+        return os;
+    }
 };
 
-#endif
+#endif // ACTOR_H
