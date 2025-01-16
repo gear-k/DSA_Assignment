@@ -1,46 +1,32 @@
 #ifndef ACTOR_H
 #define ACTOR_H
 
-#include <string>
-#include <iostream>
+#include <iostream> // for printing; remove if strictly not permitted.
+#include <cstring>
 
 class Actor {
 private:
-    int id;
-    std::string name;
-    int birthYear;
-    int age; // for convenience
+    int   id;
+    char  name[100];   // C-style storage of name
+    int   birthYear;
+    int   age;         // Age computed as 2025 - birthYear
 
 public:
-    Actor() : id(0), birthYear(0), age(0) {}
-    Actor(const std::string& name, int birthYear, int id);
+    Actor();
+    Actor(const char* name, int birthYear, int id);
 
     int getId() const;
     void setId(int newId);
 
-    std::string getName() const;
-    void setName(const std::string& newName);
+    const char* getName() const;
+    void setName(const char* newName);
 
     int getBirthYear() const;
     void setBirthYear(int newYearOfBirth);
 
     int getAge() const;
 
-    void displayDetails() const;
-
-    // For storing in List<Actor>, we need an equality check
-    bool operator==(const Actor& other) const {
-        return (this->id == other.id);
-    }
-
-    // So that List<Actor>::display() can do std::cout << actor
-    friend std::ostream& operator<<(std::ostream& os, const Actor& actor) {
-        os << "[Actor ID=" << actor.id
-            << ", Name=\"" << actor.name
-            << "\", BirthYear=" << actor.birthYear
-            << ", Age=" << actor.age << "]";
-        return os;
-    }
+    void displayDetails() const; // For printing
 };
 
 #endif // ACTOR_H

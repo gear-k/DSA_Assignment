@@ -1,8 +1,24 @@
 #include "Actor.h"
+#include <cstring>
 
-Actor::Actor(const std::string& name, int birthYear, int id)
-    : id(id), name(name), birthYear(birthYear), age(2025 - birthYear)
+Actor::Actor()
+    : id(0), birthYear(0), age(0)
 {
+    name[0] = '\0';
+}
+
+Actor::Actor(const char* nm, int birth, int aid)
+    : id(aid), birthYear(birth)
+{
+    // Use strncpy_s for safer string copy
+    if (nm) {
+        strncpy_s(name, sizeof(name), nm, _TRUNCATE);
+    }
+    else {
+        name[0] = '\0';
+    }
+
+    age = 2025 - birthYear; // Precompute
 }
 
 int Actor::getId() const {
@@ -13,12 +29,15 @@ void Actor::setId(int newId) {
     id = newId;
 }
 
-std::string Actor::getName() const {
+const char* Actor::getName() const {
     return name;
 }
 
-void Actor::setName(const std::string& newName) {
-    name = newName;
+void Actor::setName(const char* newName) {
+    // Use strncpy_s for safer string copy
+    if (newName) {
+        strncpy_s(name, sizeof(name), newName, _TRUNCATE);
+    }
 }
 
 int Actor::getBirthYear() const {
@@ -27,7 +46,7 @@ int Actor::getBirthYear() const {
 
 void Actor::setBirthYear(int newYearOfBirth) {
     birthYear = newYearOfBirth;
-    age = 2025 - birthYear;  // recalc
+    age = 2025 - birthYear;
 }
 
 int Actor::getAge() const {
@@ -41,4 +60,3 @@ void Actor::displayDetails() const {
         << ", Age: " << age
         << std::endl;
 }
-

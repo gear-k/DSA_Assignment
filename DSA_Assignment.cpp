@@ -1,6 +1,7 @@
 #include "MovieApp.h"
 #include <iostream>
 #include <limits> // For input validation
+#include <string>
 using namespace std;
 
 void displayMenu() {

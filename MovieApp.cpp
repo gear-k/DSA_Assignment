@@ -2,149 +2,135 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <algorithm>
+#include <cstdlib>   // for atoi, etc.
+#include <cstring>   // for strcmp
 using namespace std;
 
-MovieApp::MovieApp()
-    : nextActorId(1000), // or pick any starting ID
-    nextMovieId(5000)
-{
-}
-
-//------------------------------------------------------------------------------
-// 1) CSV Reading
-//------------------------------------------------------------------------------
-
-// Trims leading and trailing whitespace and quotes
-std::string trimQuotes(const std::string& str) {
+// A small helper to trim quotes/spaces
+static std::string trimQuotes(const std::string& str) {
     size_t start = str.find_first_not_of(" \"");
     size_t end = str.find_last_not_of(" \"");
-
     if (start == std::string::npos || end == std::string::npos) {
-        return ""; // Return empty string if all characters are whitespace or quotes
+        return "";
     }
     return str.substr(start, end - start + 1);
 }
 
+MovieApp::MovieApp()
+    : nextActorId(1000), // or pick any starting ID
+    nextMovieId(5000)
+{}
+
+//------------------------------------------------------------------------------
 
 void MovieApp::readActors(const std::string& filename) {
-    std::ifstream fin(filename);
-    if (!fin.is_open()) {
-        std::cerr << "Error: Could not open file \"" << filename << "\"\n";
-        return;
-    }
-
-    std::string header;
-    getline(fin, header); // Skip header line
-
-    std::string line;
-    while (getline(fin, line)) {
-        if (line.empty()) continue;
-
-        std::stringstream ss(line);
-        std::string idStr, name, birthStr;
-
-        getline(ss, idStr, ',');
-        getline(ss, name, ',');
-        getline(ss, birthStr, ',');
-
-        int id = std::stoi(idStr);
-        int birth = std::stoi(birthStr);
-
-        // Trim quotes from the name
-        name = trimQuotes(name);
-
-        // Add the actor
-        Actor actor(name, birth, id);
-        actorList.add(actor);
-
-        // Update the next available ID
-        if (id >= nextActorId) {
-            nextActorId = id + 1;
-        }
-    }
-
-    fin.close();
-}
-
-
-void MovieApp::readMovies(const std::string& filename) {
-    std::ifstream fin(filename);
-    if (!fin.is_open()) {
-        std::cerr << "Error: Could not open file \"" << filename << "\"\n";
-        return;
-    }
-
-    std::string header;
-    getline(fin, header); // Skip header line
-
-    std::string line;
-    while (getline(fin, line)) {
-        if (line.empty()) continue;
-
-        std::stringstream ss(line);
-        std::string idStr, title, yearStr;
-
-        getline(ss, idStr, ',');
-        getline(ss, title, ',');
-        getline(ss, yearStr, ',');
-
-        int id = std::stoi(idStr);
-        int year = std::stoi(yearStr);
-
-        // Trim quotes from the title
-        title = trimQuotes(title);
-
-        // Add the movie
-        Movie movie(title, "", year, id); // Plot is empty in the CSV
-        movieList.add(movie);
-
-        // Update the next available ID
-        if (id >= nextMovieId) {
-            nextMovieId = id + 1;
-        }
-    }
-
-    fin.close();
-}
-
-void MovieApp::readCast(const std::string& filename) {
-    // This CSV: person_id,movie_id
-    // We want to find the actor with that person_id, the movie with movie_id, and associate them.
-    ifstream fin(filename);
+    ifstream fin(filename.c_str());
     if (!fin.is_open()) {
         cerr << "Error: Could not open file \"" << filename << "\"\n";
         return;
     }
-    // Skip header line: "person_id,movie_id"
+
+    // skip header
     string header;
     getline(fin, header);
 
     string line;
     while (getline(fin, line)) {
         if (line.empty()) continue;
+
+        // parse
+        // "id,name,birth"
         stringstream ss(line);
-        string personIdStr, movieIdStr;
-        getline(ss, personIdStr, ',');
-        getline(ss, movieIdStr, ',');
+        string idStr, nameStr, birthStr;
+        getline(ss, idStr, ',');
+        getline(ss, nameStr, ',');
+        getline(ss, birthStr, ',');
 
-        if (personIdStr.empty() || movieIdStr.empty()) {
-            continue;
+        int id = atoi(idStr.c_str());
+        int birth = atoi(birthStr.c_str());
+        nameStr = trimQuotes(nameStr);
+
+        Actor actor(nameStr.c_str(), birth, id);
+        actorList.add(actor);
+
+        if (id >= nextActorId) {
+            nextActorId = id + 1;
         }
-        int personId = stoi(personIdStr);
-        int movieId = stoi(movieIdStr);
+    }
+    fin.close();
+}
 
-        // Find the actor object by ID
+void MovieApp::readMovies(const std::string& filename) {
+    ifstream fin(filename.c_str());
+    if (!fin.is_open()) {
+        cerr << "Error: Could not open file \"" << filename << "\"\n";
+        return;
+    }
+
+    // skip header
+    string header;
+    getline(fin, header);
+
+    string line;
+    while (getline(fin, line)) {
+        if (line.empty()) continue;
+
+        // parse
+        // "id,title,year"
+        stringstream ss(line);
+        string idStr, titleStr, yearStr;
+        getline(ss, idStr, ',');
+        getline(ss, titleStr, ',');
+        getline(ss, yearStr, ',');
+
+        int id = atoi(idStr.c_str());
+        int year = atoi(yearStr.c_str());
+        titleStr = trimQuotes(titleStr);
+
+        Movie movie(titleStr.c_str(), "", year, id);
+        movieList.add(movie);
+
+        if (id >= nextMovieId) {
+            nextMovieId = id + 1;
+        }
+    }
+    fin.close();
+}
+
+void MovieApp::readCast(const std::string& filename) {
+    ifstream fin(filename.c_str());
+    if (!fin.is_open()) {
+        cerr << "Error: Could not open file \"" << filename << "\"\n";
+        return;
+    }
+    // skip header
+    string header;
+    getline(fin, header);
+
+    string line;
+    while (getline(fin, line)) {
+        if (line.empty()) continue;
+        // parse "person_id,movie_id"
+        stringstream ss(line);
+        string pidStr, midStr;
+        getline(ss, pidStr, ',');
+        getline(ss, midStr, ',');
+
+        if (pidStr.empty() || midStr.empty()) continue;
+
+        int personId = atoi(pidStr.c_str());
+        int movieId = atoi(midStr.c_str());
+
+        // find the Actor and Movie
         Actor* foundActor = nullptr;
         actorList.display([&](Actor& a) {
             if (a.getId() == personId) {
                 foundActor = &a;
-                return true; // break
+                return true;
             }
             return false;
             });
 
-        // Find the movie object by ID
         Movie* foundMovie = nullptr;
         movieList.display([&](Movie& m) {
             if (m.getId() == movieId) {
@@ -166,14 +152,14 @@ void MovieApp::readCast(const std::string& filename) {
 //------------------------------------------------------------------------------
 
 void MovieApp::addNewActor(const std::string& name, int birthYear) {
-    Actor actor(name, birthYear, nextActorId);
+    Actor actor(name.c_str(), birthYear, nextActorId);
     ++nextActorId;
     actorList.add(actor);
     cout << "Added new actor: \"" << name << "\" (ID=" << actor.getId() << ")\n";
 }
 
 void MovieApp::addNewMovie(const std::string& title, const std::string& plot, int releaseYear) {
-    Movie movie(title, plot, releaseYear, nextMovieId);
+    Movie movie(title.c_str(), plot.c_str(), releaseYear, nextMovieId);
     ++nextMovieId;
     movieList.add(movie);
     cout << "Added new movie: \"" << title << "\" (ID=" << movie.getId() << ")\n";
@@ -186,9 +172,9 @@ void MovieApp::addNewMovie(const std::string& title, const std::string& plot, in
 void MovieApp::addActorToMovie(const std::string& actorName, const std::string& movieTitle) {
     Movie* targetMovie = nullptr;
     movieList.display([&](Movie& m) {
-        if (m.getTitle() == movieTitle) {
+        if (strcmp(m.getTitle(), movieTitle.c_str()) == 0) {
             targetMovie = &m;
-            return true; // break
+            return true;
         }
         return false;
         });
@@ -200,9 +186,9 @@ void MovieApp::addActorToMovie(const std::string& actorName, const std::string& 
 
     Actor* targetActor = nullptr;
     actorList.display([&](Actor& a) {
-        if (a.getName() == actorName) {
+        if (strcmp(a.getName(), actorName.c_str()) == 0) {
             targetActor = &a;
-            return true; // break
+            return true;
         }
         return false;
         });
@@ -212,7 +198,6 @@ void MovieApp::addActorToMovie(const std::string& actorName, const std::string& 
         return;
     }
 
-    // Add the Actor to the Movie
     targetMovie->addActor(*targetActor);
     cout << "Actor \"" << actorName << "\" added to movie \"" << movieTitle << "\"\n";
 }
@@ -225,13 +210,13 @@ void MovieApp::updateActorDetails(int actorId, const std::string& newName, int n
     bool found = false;
     actorList.display([&](Actor& a) {
         if (a.getId() == actorId) {
-            a.setName(newName);
+            a.setName(newName.c_str());
             a.setBirthYear(newYearOfBirth);
             cout << "Updated Actor ID " << actorId
                 << " => Name: " << newName
                 << ", BirthYear: " << newYearOfBirth << endl;
             found = true;
-            return true; // break
+            return true;
         }
         return false;
         });
@@ -244,15 +229,15 @@ void MovieApp::updateMovieDetails(int movieId, const std::string& newTitle, cons
     bool found = false;
     movieList.display([&](Movie& m) {
         if (m.getId() == movieId) {
-            m.setTitle(newTitle);
-            m.setPlot(newPlot);
+            m.setTitle(newTitle.c_str());
+            m.setPlot(newPlot.c_str());
             m.setReleaseYear(newReleaseYear);
             cout << "Updated Movie ID " << movieId
                 << " => Title: " << newTitle
                 << ", Plot: " << newPlot
                 << ", Year: " << newReleaseYear << endl;
             found = true;
-            return true; // break
+            return true;
         }
         return false;
         });
@@ -267,27 +252,25 @@ void MovieApp::updateMovieDetails(int movieId, const std::string& newTitle, cons
 
 void MovieApp::displayAllActors() const {
     if (actorList.isEmpty()) {
-        std::cout << "No actors found.\n";
+        cout << "No actors found.\n";
         return;
     }
     actorList.display([](const Actor& actor) {
         actor.displayDetails();
-        return false; // Continue displaying
+        return false; // continue
         });
 }
 
-
 void MovieApp::displayAllMovies() const {
     if (movieList.isEmpty()) {
-        std::cout << "No movies found.\n";
+        cout << "No movies found.\n";
         return;
     }
     movieList.display([](const Movie& movie) {
         movie.displayDetails();
-        return false; // Continue displaying
+        return false; // continue
         });
 }
-
 
 void MovieApp::displayActorsByAge(int minAge, int maxAge) const {
     bool anyFound = false;
@@ -305,7 +288,6 @@ void MovieApp::displayActorsByAge(int minAge, int maxAge) const {
 }
 
 void MovieApp::displayRecentMovies() const {
-    // "last 3 years" means releaseYear >= 2025 - 3 => 2022
     const int cutoff = 2025 - 3;
     bool anyFound = false;
     movieList.display([&](const Movie& m) {
@@ -323,7 +305,7 @@ void MovieApp::displayRecentMovies() const {
 void MovieApp::displayMoviesOfActor(const std::string& actorName) const {
     bool anyFound = false;
     movieList.display([&](const Movie& m) {
-        if (m.hasActor(actorName)) {
+        if (m.hasActor(actorName.c_str())) {
             cout << m.getTitle() << " (" << m.getReleaseYear() << ")\n";
             anyFound = true;
         }
@@ -337,11 +319,13 @@ void MovieApp::displayMoviesOfActor(const std::string& actorName) const {
 void MovieApp::displayActorsInMovie(const std::string& movieTitle) const {
     bool foundMovie = false;
     movieList.display([&](const Movie& m) {
-        if (m.getTitle() == movieTitle) {
+        if (strcmp(m.getTitle(), movieTitle.c_str()) == 0) {
             foundMovie = true;
             cout << "Actors in \"" << movieTitle << "\":\n";
-            // Just display them
-            m.getActors().display();
+            m.getActors().display([](const Actor& a) {
+                cout << " - " << a.getName() << endl;
+                return false;
+                });
             return true; // break
         }
         return false;
@@ -351,34 +335,181 @@ void MovieApp::displayActorsInMovie(const std::string& movieTitle) const {
     }
 }
 
-void MovieApp::displayActorsKnownBy(const std::string& actorName) const {
-    // We'll gather all distinct actors that share a movie with `actorName`
-    List<std::string> knownNames; // store actor names
+//------------------------------------------------------------------------------
+// BFS Utility (no STL) for displayActorsKnownBy
+//------------------------------------------------------------------------------
 
-    // For each movie, if it has `actorName`, add other cast members
-    movieList.display([&](const Movie& m) {
-        if (m.hasActor(actorName)) {
-            // Add all other actors
-            m.getActors().display([&](const Actor& a) {
-                if (a.getName() != actorName) {
-                    // Check if already in knownNames
-                    bool alreadyExists = false;
-                    knownNames.display([&](const std::string& existing) {
-                        if (existing == a.getName()) {
-                            alreadyExists = true;
-                            return true; // break
-                        }
-                        return false;
-                        });
-                    if (!alreadyExists) {
-                        // Add and also print
-                        knownNames.add(a.getName());
-                        cout << a.getName() << endl;
-                    }
+// We map each actor's ID to an array index. Then adjacencyLists[i] is a list of indices
+void MovieApp::buildActorGraph(
+    int actorIds[],
+    int& actorCount,
+    List<int>* adjacencyLists,
+    const int MAX_ACTORS
+) const {
+    actorCount = 0;
+
+    // 1) Collect all actor IDs in an array (actorIds[]).
+    //    We'll use the order in which they appear in actorList.
+    actorList.display([&](const Actor& actor) {
+        if (actorCount < MAX_ACTORS) {
+            actorIds[actorCount] = actor.getId();
+            actorCount++;
+        }
+        return false;
+        });
+
+    // 2) For each actor, adjacencyLists[i] starts empty. We'll fill them now.
+    //    We do so by scanning each movie, collecting the actor indices, then linking them.
+    //    a) For each movie, gather its actors into a small array of indices
+    movieList.display([&](const Movie& mov) {
+        // gather actor indices
+        int tmpIdx[300];
+        int tmpCount = 0;
+
+        mov.getActors().display([&](const Actor& a) {
+            // find the index of a.getId() in actorIds[]
+            int aIndex = findActorIndexInArray(a.getId(), actorIds, actorCount);
+            if (aIndex != -1 && tmpCount < 300) {
+                tmpIdx[tmpCount++] = aIndex;
+            }
+            return false;
+            });
+
+        // link them pairwise
+        for (int i = 0; i < tmpCount; i++) {
+            for (int j = i + 1; j < tmpCount; j++) {
+                adjacencyLists[tmpIdx[i]].add(tmpIdx[j]);
+                adjacencyLists[tmpIdx[j]].add(tmpIdx[i]);
+            }
+        }
+        return false;
+        });
+}
+
+int MovieApp::findActorIndexInArray(int actorId, const int actorIds[], int count) const {
+    for (int i = 0; i < count; i++) {
+        if (actorIds[i] == actorId) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+// Custom minimal queue for BFS (stores up to 2000 entries)
+struct BFSQueue {
+    struct Pair {
+        int idx;
+        int depth;
+    };
+    Pair data[2000];
+    int front;
+    int rear;
+    int count;
+
+    BFSQueue() : front(0), rear(-1), count(0) {}
+
+    bool isEmpty() const { return count == 0; }
+    bool isFull()  const { return count == 2000; }
+
+    bool enqueue(int i, int d) {
+        if (isFull()) return false;
+        rear = (rear + 1) % 2000;
+        data[rear].idx = i;
+        data[rear].depth = d;
+        count++;
+        return true;
+    }
+
+    bool dequeue(Pair& out) {
+        if (isEmpty()) return false;
+        out = data[front];
+        front = (front + 1) % 2000;
+        count--;
+        return true;
+    }
+};
+
+void MovieApp::displayActorsKnownBy(const std::string& actorName) const {
+    // 1) Find the starting actor ID and confirm existence
+    int startActorId = -1;
+    actorList.display([&](const Actor& a) {
+        if (strcmp(a.getName(), actorName.c_str()) == 0) {
+            startActorId = a.getId();
+            return true;
+        }
+        return false;
+        });
+    if (startActorId == -1) {
+        cout << "[Error] Actor \"" << actorName << "\" not found.\n";
+        return;
+    }
+
+    // 2) Build adjacency
+    const int MAX_ACTORS = 2000;
+    int actorIds[MAX_ACTORS];
+    List<int> adjacencyLists[MAX_ACTORS];
+    int totalActors = 0;
+    buildActorGraph(actorIds, totalActors, adjacencyLists, MAX_ACTORS);
+
+    // 3) Find the index of 'startActorId' in actorIds[]
+    int startIndex = findActorIndexInArray(startActorId, actorIds, totalActors);
+    if (startIndex == -1) {
+        cout << "[Error] Actor index not found.\n";
+        return;
+    }
+
+    // 4) BFS up to depth 2
+    bool visited[2000];
+    for (int i = 0; i < 2000; i++) {
+        visited[i] = false;
+    }
+    BFSQueue q;
+    q.enqueue(startIndex, 0);
+    visited[startIndex] = true;
+
+    // We'll collect all discovered actor indices in a list (excluding start)
+    List<int> discoveredIndices;
+
+    BFSQueue::Pair current;
+    while (!q.isEmpty()) {
+        if (!q.dequeue(current)) break;
+        int curIdx = current.idx;
+        int curDepth = current.depth;
+
+        if (curDepth < 2) {
+            // For each neighbor of curIdx
+            adjacencyLists[curIdx].display([&](int neighborIdx) {
+                if (!visited[neighborIdx]) {
+                    visited[neighborIdx] = true;
+                    discoveredIndices.add(neighborIdx);
+                    q.enqueue(neighborIdx, curDepth + 1);
                 }
                 return false;
                 });
         }
+    }
+
+    if (discoveredIndices.isEmpty()) {
+        cout << "No actors found that \"" << actorName << "\" knows (up to 2 levels).\n";
+        return;
+    }
+
+    cout << "Actors known by \"" << actorName << "\" (up to 2 levels):\n";
+
+    // 5) Display them by name
+    discoveredIndices.display([&](int idx) {
+        if (idx == startIndex) return false; // skip the original
+        int realActorId = actorIds[idx];
+
+        // Look up that ID in actorList again to print name
+        // (We could store the name in another array, but let's do a quick find.)
+        actorList.display([&](const Actor& a) {
+            if (a.getId() == realActorId) {
+                cout << " - " << a.getName() << endl;
+                return true;
+            }
+            return false;
+            });
         return false;
         });
 }

@@ -1,9 +1,30 @@
 #include "Movie.h"
-#include <iostream>
+#include <cstring> // for strncpy_s
 
-Movie::Movie(const std::string& title, const std::string& plot, int releaseYear, int id)
-    : id(id), title(title), plot(plot), releaseYear(releaseYear)
+Movie::Movie()
+    : id(0), releaseYear(0)
 {
+    title[0] = '\0';
+    plot[0] = '\0';
+}
+
+Movie::Movie(const char* ttl, const char* plt, int rYear, int mid)
+    : id(mid), releaseYear(rYear)
+{
+    // Use strncpy_s for safer string copy
+    if (ttl) {
+        strncpy_s(title, sizeof(title), ttl, _TRUNCATE);
+    }
+    else {
+        title[0] = '\0';
+    }
+
+    if (plt) {
+        strncpy_s(plot, sizeof(plot), plt, _TRUNCATE);
+    }
+    else {
+        plot[0] = '\0';
+    }
 }
 
 int Movie::getId() const {
@@ -14,20 +35,26 @@ void Movie::setId(int newId) {
     id = newId;
 }
 
-std::string Movie::getTitle() const {
+const char* Movie::getTitle() const {
     return title;
 }
 
-void Movie::setTitle(const std::string& newTitle) {
-    title = newTitle;
+void Movie::setTitle(const char* newTitle) {
+    // Use strncpy_s for safer string copy
+    if (newTitle) {
+        strncpy_s(title, sizeof(title), newTitle, _TRUNCATE);
+    }
 }
 
-std::string Movie::getPlot() const {
+const char* Movie::getPlot() const {
     return plot;
 }
 
-void Movie::setPlot(const std::string& newPlot) {
-    plot = newPlot;
+void Movie::setPlot(const char* newPlot) {
+    // Use strncpy_s for safer string copy
+    if (newPlot) {
+        strncpy_s(plot, sizeof(plot), newPlot, _TRUNCATE);
+    }
 }
 
 int Movie::getReleaseYear() const {
@@ -39,8 +66,6 @@ void Movie::setReleaseYear(int newYear) {
 }
 
 void Movie::addActor(const Actor& actor) {
-    // Avoid duplicates if you wish; otherwise, just add.
-    // Check if actor already in the list:
     bool exists = false;
     actors.display([&](const Actor& a) {
         if (a.getId() == actor.getId()) {
@@ -54,12 +79,12 @@ void Movie::addActor(const Actor& actor) {
     }
 }
 
-bool Movie::hasActor(const std::string& actorName) const {
+bool Movie::hasActor(const char* actorName) const {
     bool found = false;
     actors.display([&](const Actor& a) {
-        if (a.getName() == actorName) {
+        if (std::strcmp(a.getName(), actorName) == 0) {
             found = true;
-            return true; // break
+            return true;
         }
         return false;
         });
