@@ -349,8 +349,7 @@ void MovieApp::buildActorGraph(
 ) const {
     actorCount = 0;
 
-    // 1) Collect all actor IDs in an array (actorIds[]).
-    //    We'll use the order in which they appear in actorList.
+    // Step 1: Collect all actor IDs in actorIds array
     actorList.display([&](const Actor& actor) {
         if (actorCount < MAX_ACTORS) {
             actorIds[actorCount] = actor.getId();
@@ -359,16 +358,12 @@ void MovieApp::buildActorGraph(
         return false;
         });
 
-    // 2) For each actor, adjacencyLists[i] starts empty. We'll fill them now.
-    //    We do so by scanning each movie, collecting the actor indices, then linking them.
-    //    a) For each movie, gather its actors into a small array of indices
+    // Step 2: Dynamically allocate temporary array for each movie
     movieList.display([&](const Movie& mov) {
-        // gather actor indices
-        int tmpIdx[300];
+        int* tmpIdx = new int[300]; // Dynamically allocate memory
         int tmpCount = 0;
 
         mov.getActors().display([&](const Actor& a) {
-            // find the index of a.getId() in actorIds[]
             int aIndex = findActorIndexInArray(a.getId(), actorIds, actorCount);
             if (aIndex != -1 && tmpCount < 300) {
                 tmpIdx[tmpCount++] = aIndex;
@@ -376,16 +371,18 @@ void MovieApp::buildActorGraph(
             return false;
             });
 
-        // link them pairwise
         for (int i = 0; i < tmpCount; i++) {
             for (int j = i + 1; j < tmpCount; j++) {
                 adjacencyLists[tmpIdx[i]].add(tmpIdx[j]);
                 adjacencyLists[tmpIdx[j]].add(tmpIdx[i]);
             }
         }
+
+        delete[] tmpIdx; // Free dynamically allocated memory
         return false;
         });
 }
+
 
 int MovieApp::findActorIndexInArray(int actorId, const int actorIds[], int count) const {
     for (int i = 0; i < count; i++) {
@@ -407,7 +404,13 @@ struct BFSQueue {
     int rear;
     int count;
 
-    BFSQueue() : front(0), rear(-1), count(0) {}
+    BFSQueue() : front(0), rear(-1), count(0) {
+        for (int i = 0; i < 2000; i++) {
+            data[i].idx = 0;    // Initialize the idx field of each Pair
+            data[i].depth = 0;  // Initialize the depth field of each Pair
+        }
+    }
+
 
     bool isEmpty() const { return count == 0; }
     bool isFull()  const { return count == 2000; }
