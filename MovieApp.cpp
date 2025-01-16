@@ -4,6 +4,7 @@
 #include <sstream>
 #include <cstdlib>   // for atoi, etc.
 #include <cstring>   // for strcmp
+#include "ActorGraph.h"
 using namespace std;
 
 // A small helper to trim quotes/spaces
@@ -430,7 +431,7 @@ struct BFSQueue {
 };
 
 void MovieApp::displayActorsKnownBy(const std::string& actorName) const {
-    // 1) Find the starting actor ID and confirm existence
+    // 1) Find the starting actor ID
     int startActorId = -1;
     actorList.display([&](const Actor& a) {
         if (strcmp(a.getName(), actorName.c_str()) == 0) {
@@ -439,70 +440,41 @@ void MovieApp::displayActorsKnownBy(const std::string& actorName) const {
         }
         return false;
         });
+
     if (startActorId == -1) {
         cout << "[Error] Actor \"" << actorName << "\" not found.\n";
         return;
     }
 
-    // 2) Build adjacency
-    const int MAX_ACTORS = 2000;
-    int actorIds[MAX_ACTORS];
-    List<int> adjacencyLists[MAX_ACTORS];
+    // 2) Build adjacency lists using ActorGraph utility
+    int actorIds[ActorGraph::MAX_ACTORS];
+    List<int> adjacencyLists[ActorGraph::MAX_ACTORS];
     int totalActors = 0;
-    buildActorGraph(actorIds, totalActors, adjacencyLists, MAX_ACTORS);
 
-    // 3) Find the index of 'startActorId' in actorIds[]
-    int startIndex = findActorIndexInArray(startActorId, actorIds, totalActors);
+    ActorGraph::buildActorGraph(actorList, movieList, actorIds, totalActors, adjacencyLists);
+
+    // 3) Find starting index
+    int startIndex = ActorGraph::findActorIndexInArray(startActorId, actorIds, totalActors);
     if (startIndex == -1) {
         cout << "[Error] Actor index not found.\n";
         return;
     }
 
-    // 4) BFS up to depth 2
-    bool visited[2000];
-    for (int i = 0; i < 2000; i++) {
-        visited[i] = false;
-    }
-    BFSQueue q;
-    q.enqueue(startIndex, 0);
-    visited[startIndex] = true;
-
-    // We'll collect all discovered actor indices in a list (excluding start)
-    List<int> discoveredIndices;
-
-    BFSQueue::Pair current;
-    while (!q.isEmpty()) {
-        if (!q.dequeue(current)) break;
-        int curIdx = current.idx;
-        int curDepth = current.depth;
-
-        if (curDepth < 2) {
-            // For each neighbor of curIdx
-            adjacencyLists[curIdx].display([&](int neighborIdx) {
-                if (!visited[neighborIdx]) {
-                    visited[neighborIdx] = true;
-                    discoveredIndices.add(neighborIdx);
-                    q.enqueue(neighborIdx, curDepth + 1);
-                }
-                return false;
-                });
-        }
-    }
+    // 4) Find connected actors using BFS
+    List<int> discoveredIndices = ActorGraph::findConnectedActors(startIndex, adjacencyLists);
 
     if (discoveredIndices.isEmpty()) {
         cout << "No actors found that \"" << actorName << "\" knows (up to 2 levels).\n";
         return;
     }
 
+    // 5) Display results
     cout << "Actors known by \"" << actorName << "\" (up to 2 levels):\n";
 
-    // 5) Display them by name
     discoveredIndices.display([&](int idx) {
-        if (idx == startIndex) return false; // skip the original
+        if (idx == startIndex) return false;
         int realActorId = actorIds[idx];
 
-        // Look up that ID in actorList again to print name
-        // (We could store the name in another array, but let's do a quick find.)
         actorList.display([&](const Actor& a) {
             if (a.getId() == realActorId) {
                 cout << " - " << a.getName() << endl;

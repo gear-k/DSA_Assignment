@@ -128,12 +128,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Actor.cpp" />
+    <ClCompile Include="ActorGraph.cpp" />
     <ClCompile Include="DSA_Assignment.cpp" />
     <ClCompile Include="Movie.cpp" />
     <ClCompile Include="MovieApp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Actor.h" />
+    <ClInclude Include="ActorGraph.h" />
     <ClInclude Include="List.h" />
     <ClInclude Include="Movie.h" />
     <ClInclude Include="MovieApp.h" />
