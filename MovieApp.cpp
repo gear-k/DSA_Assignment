@@ -288,36 +288,51 @@ void MovieApp::displayAllActors() const {
 
 void MovieApp::displayAllMovies() const {
     if (movieList.isEmpty()) {
-        cout << "No movies found.\n";
+        std::cout << "No movies found.\n";
         return;
     }
 
     static const int MAX_MOVIES = 2000;
-    Movie movieArray[MAX_MOVIES];
+    // Allocate on the heap
+    Movie* movieArray = new Movie[MAX_MOVIES];
     int count = 0;
 
-    // Collect all movies into an array
+    // Collect all movies into the array
     movieList.display([&](const Movie& movie) {
         if (count < MAX_MOVIES) {
             movieArray[count++] = movie;
         }
-        return false; // continue traversal
+        return false; // Continue traversal
         });
 
-    // Sort movies alphabetically by title
+    if (count == 0) {
+        std::cout << "No movies found.\n";
+        delete[] movieArray; // Clean up
+        return;
+    }
+
+    // Bubble Sort to sort movies by title
     for (int i = 0; i < count - 1; ++i) {
+        bool swapped = false; // Optimization to stop if no swaps occurred
         for (int j = 0; j < count - i - 1; ++j) {
-            if (strcmp(movieArray[j].getTitle(), movieArray[j + 1].getTitle()) > 0) {
+            if (std::strcmp(movieArray[j].getTitle(), movieArray[j + 1].getTitle()) > 0) {
                 std::swap(movieArray[j], movieArray[j + 1]);
+                swapped = true;
             }
+        }
+        if (!swapped) {
+            break; // Array is already sorted
         }
     }
 
     // Display sorted movies
-    cout << "All Movies (alphabetical order):\n";
+    std::cout << "All Movies (alphabetical order):\n";
     for (int i = 0; i < count; ++i) {
         movieArray[i].displayDetails();
     }
+
+    // Clean up heap memory
+    delete[] movieArray;
 }
 
 void MovieApp::displayActorsByAge(int minAge, int maxAge) const {
@@ -361,7 +376,8 @@ void MovieApp::displayRecentMovies() const {
 
 void MovieApp::displayMoviesOfActor(const std::string& actorName) const {
     static const int MAX_MOVIES = 2000;
-    Movie foundMovies[MAX_MOVIES];
+    // Allocate on the heap
+    Movie* foundMovies = new Movie[MAX_MOVIES];
     int foundCount = 0;
 
     // Collect all movies that have this actor
@@ -376,6 +392,7 @@ void MovieApp::displayMoviesOfActor(const std::string& actorName) const {
 
     if (foundCount == 0) {
         cout << "No movies found for actor \"" << actorName << "\".\n";
+        delete[] foundMovies; // Clean up
         return;
     }
 
@@ -394,7 +411,11 @@ void MovieApp::displayMoviesOfActor(const std::string& actorName) const {
         cout << " - " << foundMovies[i].getTitle()
             << " (" << foundMovies[i].getReleaseYear() << ")\n";
     }
+
+    // Clean up heap memory
+    delete[] foundMovies;
 }
+
 
 
 void MovieApp::displayActorsInMovie(const std::string& movieTitle) const {
@@ -445,6 +466,72 @@ void MovieApp::displayActorsInMovie(const std::string& movieTitle) const {
     }
 }
 
+// THIS IS A TEST MAKE SURE TO REMOVE THIS BEFORE SUBMISSION CEDRICCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+void MovieApp::runAllTests() {
+    cout << "\n========== Running All Tests ==========\n";
+
+    // 1. Test Adding New Actors
+    cout << "\n-- Test: Adding New Actors --\n";
+    addNewActor("Leonardo DiCaprio", 1974);
+    addNewActor("Kate Winslet", 1975);
+    addNewActor("Brad Pitt", 1963);
+    displayAllActors();
+
+    // 2. Test Adding New Movies
+    cout << "\n-- Test: Adding New Movies --\n";
+    addNewMovie("Inception", "A thief who steals corporate secrets through dream-sharing technology.", 2010);
+    addNewMovie("Titanic", "A love story that unfolds aboard the ill-fated RMS Titanic.", 1997);
+    addNewMovie("Fight Club", "An insomniac office worker and a soap maker form an underground fight club.", 1999);
+    displayAllMovies();
+
+    // 3. Test Adding Actors to Movies
+    cout << "\n-- Test: Adding Actors to Movies --\n";
+    addActorToMovie("Leonardo DiCaprio", "Inception");
+    addActorToMovie("Kate Winslet", "Titanic");
+    addActorToMovie("Brad Pitt", "Fight Club");
+    addActorToMovie("Leonardo DiCaprio", "Titanic"); // Leonardo in Titanic as well
+    displayActorsInMovie("Inception");
+    displayActorsInMovie("Titanic");
+    displayActorsInMovie("Fight Club");
+
+    // 4. Test Updating Actor Details
+    cout << "\n-- Test: Updating Actor Details --\n";
+    // Assume actor IDs are assigned starting from 1 as per addNewActor implementation
+    updateActorDetails(1, "Leonardo Wilhelm DiCaprio", 1974);
+    updateActorDetails(2, "Katherine Winslet", 1975);
+    displayAllActors();
+
+    // 5. Test Updating Movie Details
+    cout << "\n-- Test: Updating Movie Details --\n";
+    // Assume movie IDs are assigned starting from 1 as per addNewMovie implementation
+    updateMovieDetails(1, "Inception (Edited)", "A skilled thief is offered a chance to erase his past.", 2010);
+    displayAllMovies();
+
+    // 6. Test Displaying Movies of an Actor
+    cout << "\n-- Test: Displaying Movies of an Actor --\n";
+    displayMoviesOfActor("Leonardo Wilhelm DiCaprio");
+    displayMoviesOfActor("Katherine Winslet");
+    displayMoviesOfActor("Brad Pitt");
+
+    // 7. Test Displaying Actors by Age Range
+    cout << "\n-- Test: Displaying Actors by Age Range (40-60) --\n";
+    displayActorsByAge(40, 60);
+
+    // 8. Test Displaying Recent Movies (Released in Last 3 Years)
+    cout << "\n-- Test: Displaying Recent Movies (Released in Last 3 Years) --\n";
+    displayRecentMovies();
+
+    // 9. Test Displaying Actors Known by an Actor
+    cout << "\n-- Test: Displaying Actors Known by an Actor --\n";
+    // For simplicity, assuming 'known by' is predefined or not implemented
+    // You may need to implement relationships for this feature
+    // Here, we'll just display based on current data
+    displayActorsKnownBy("Leonardo Wilhelm DiCaprio");
+    displayActorsKnownBy("Katherine Winslet");
+    displayActorsKnownBy("Brad Pitt");
+
+    cout << "\n========== All Tests Completed ==========\n";
+}
 
 //------------------------------------------------------------------------------
 // BFS Utility (no STL) for displayActorsKnownBy

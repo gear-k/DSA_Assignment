@@ -58,6 +58,9 @@ public:
 
     // The BFS version (2-level acquaintances):
     void displayActorsKnownBy(const std::string& actorName) const;
+
+    // New Test Function
+    void runAllTests();
 };
 
 #endif // MOVIE_APP_H

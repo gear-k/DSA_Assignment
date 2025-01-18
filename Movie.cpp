@@ -11,7 +11,6 @@ Movie::Movie()
 Movie::Movie(const char* ttl, const char* plt, int rYear, int mid)
     : id(mid), releaseYear(rYear)
 {
-    // Use strncpy_s for safer string copy
     if (ttl) {
         strncpy_s(title, sizeof(title), ttl, _TRUNCATE);
     }
@@ -25,6 +24,27 @@ Movie::Movie(const char* ttl, const char* plt, int rYear, int mid)
     else {
         plot[0] = '\0';
     }
+}
+
+// Copy Constructor
+Movie::Movie(const Movie& other)
+    : id(other.id), releaseYear(other.releaseYear), actors(other.actors)
+{
+    strncpy_s(title, sizeof(title), other.title, _TRUNCATE);
+    strncpy_s(plot, sizeof(plot), other.plot, _TRUNCATE);
+}
+
+// Copy Assignment Operator
+Movie& Movie::operator=(const Movie& other) {
+    if (this != &other) {
+        id = other.id;
+        releaseYear = other.releaseYear;
+        actors = other.actors;
+
+        strncpy_s(title, sizeof(title), other.title, _TRUNCATE);
+        strncpy_s(plot, sizeof(plot), other.plot, _TRUNCATE);
+    }
+    return *this;
 }
 
 int Movie::getId() const {
@@ -80,16 +100,28 @@ void Movie::addActor(const Actor& actor) {
 }
 
 bool Movie::hasActor(const char* actorName) const {
+    if (actorName == nullptr) {
+        std::cerr << "Error: actorName is nullptr." << std::endl;
+        return false;
+    }
+
     bool found = false;
     actors.display([&](const Actor& a) {
-        if (std::strcmp(a.getName(), actorName) == 0) {
+        const char* aName = a.getName();
+        if (aName == nullptr) {
+            std::cerr << "Error: Actor name is nullptr." << std::endl;
+            return false;
+        }
+        std::cout << "Comparing Actor Name: " << aName << " with " << actorName << std::endl;
+        if (std::strcmp(aName, actorName) == 0) {
             found = true;
-            return true;
+            return true; // Break out of the loop
         }
         return false;
         });
     return found;
 }
+
 
 List<Actor>& Movie::getActors() {
     return actors;

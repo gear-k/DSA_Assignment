@@ -19,6 +19,7 @@ void displayMenu() {
     cout << "11. Display Actors in a Movie\n";
     cout << "12. Display Actors Known by an Actor\n";
     cout << "13. Exit\n";
+    cout << "14. Run All Tests\n"; // New Option
     cout << "Enter your choice: ";
 }
 
@@ -152,6 +153,11 @@ int main() {
         case 13:
             cout << "Exiting... Thank you for using the Movie Management System!\n";
             break;
+
+        case 14: { // New Case for Testing
+            app.runAllTests();
+            break;
+        }
         default:
             cout << "Invalid choice. Please select a valid option (1-13).\n";
         }

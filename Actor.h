@@ -1,27 +1,23 @@
 #ifndef ACTOR_H
 #define ACTOR_H
 
-#include <iostream> // for printing; remove if strictly not permitted.
 #include <cstring>
+#include <iostream>
 
 class Actor {
 private:
-    int   id;
-    char  name[100];   // C-style storage of name
-    int   birthYear;
-    int   age;         // Age computed as 2025 - birthYear
+    char name[100];      // Fixed-size buffer for name
+    int id;
+    int birthYear;
+    int age;
 
 public:
-    // Default Constructor
+    // Constructors
     Actor();
-
-    // Parameterized Constructor
-    Actor(const char* name, int birthYear, int id);
-
-    // Copy Constructor
+    Actor(const char* nm, int birth, int aid);
     Actor(const Actor& other);
 
-    // Copy Assignment Operator
+    // Assignment Operator
     Actor& operator=(const Actor& other);
 
     // Getters and Setters
@@ -36,8 +32,13 @@ public:
 
     int getAge() const;
 
-    // Display actor details for printing or debugging
+    // Display Method
     void displayDetails() const;
+
+    // Equality Operator (for List::remove)
+    bool operator==(const Actor& other) const {
+        return id == other.id;
+    }
 };
 
 #endif // ACTOR_H

@@ -16,8 +16,40 @@ private:
     int   size;           // Tracks the size of the list
 
 public:
-    // Constructor: Initializes an empty list
+    // Default Constructor
     List() : head(nullptr), size(0) {}
+
+    // Copy Constructor
+    List(const List<T>& other) : head(nullptr), size(0) {
+        Node* current = other.head;
+        while (current) {
+            add(current->data);
+            current = current->next;
+        }
+    }
+
+    // Copy Assignment Operator
+    List<T>& operator=(const List<T>& other) {
+        if (this != &other) { // Prevent self-assignment
+            // Clear existing list
+            Node* cur = head;
+            while (cur) {
+                Node* tmp = cur;
+                cur = cur->next;
+                delete tmp;
+            }
+            head = nullptr;
+            size = 0;
+
+            // Copy from other
+            Node* current = other.head;
+            while (current) {
+                add(current->data);
+                current = current->next;
+            }
+        }
+        return *this;
+    }
 
     // Destructor: Ensures proper memory cleanup
     ~List() {
