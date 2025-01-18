@@ -32,14 +32,7 @@ public:
     List<T>& operator=(const List<T>& other) {
         if (this != &other) { // Prevent self-assignment
             // Clear existing list
-            Node* cur = head;
-            while (cur) {
-                Node* tmp = cur;
-                cur = cur->next;
-                delete tmp;
-            }
-            head = nullptr;
-            size = 0;
+            clear();
 
             // Copy from other
             Node* current = other.head;
@@ -53,6 +46,11 @@ public:
 
     // Destructor: Ensures proper memory cleanup
     ~List() {
+        clear();
+    }
+
+    // Clear the list and release memory
+    void clear() {
         Node* cur = head;
         while (cur) {
             Node* tmp = cur;
@@ -61,6 +59,7 @@ public:
             tmp = nullptr;   // Avoid dangling pointers
         }
         head = nullptr;       // Reset the head pointer
+        size = 0;             // Reset the size
     }
 
     // Add a new item to the end of the list

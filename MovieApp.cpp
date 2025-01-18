@@ -2,12 +2,13 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <cstdlib>   // for atoi, etc.
+#include <cstdlib>   // for atoi
 #include <cstring>   // for strcmp
 #include "ActorGraph.h"
+
 using namespace std;
 
-// A small helper to trim quotes/spaces
+// Helper to trim quotes/spaces
 static std::string trimQuotes(const std::string& str) {
     size_t start = str.find_first_not_of(" \"");
     size_t end = str.find_last_not_of(" \"");
@@ -16,36 +17,56 @@ static std::string trimQuotes(const std::string& str) {
     }
     return str.substr(start, end - start + 1);
 }
+// Helper function to trim spaces
+
+
+// Helper function to trim leading and trailing spaces
+static std::string trim(const std::string& str) {
+    size_t start = str.find_first_not_of(" \t");
+    size_t end = str.find_last_not_of(" \t");
+
+    if (start == std::string::npos || end == std::string::npos) {
+        return ""; // String is empty or contains only spaces
+    }
+
+    return str.substr(start, end - start + 1);
+}
+
 
 MovieApp::MovieApp()
-    : nextActorId(1000), // or pick any starting ID
-    nextMovieId(5000)
-{}
+    : nextActorId(1000), nextMovieId(5000) {
+}
 
 //------------------------------------------------------------------------------
-
 void MovieApp::readActors(const std::string& filename) {
     ifstream fin(filename.c_str());
     if (!fin.is_open()) {
-        cerr << "Error: Could not open file \"" << filename << "\"\n";
+        cerr << "[Error] Could not open file: " << filename << "\n";
         return;
     }
 
-    // skip header
     string header;
-    getline(fin, header);
+    if (!getline(fin, header)) {
+        cerr << "[Error] File is empty: " << filename << "\n";
+        fin.close();
+        return;
+    }
 
     string line;
     while (getline(fin, line)) {
         if (line.empty()) continue;
 
-        // parse
-        // "id,name,birth"
         stringstream ss(line);
         string idStr, nameStr, birthStr;
+
         getline(ss, idStr, ',');
         getline(ss, nameStr, ',');
         getline(ss, birthStr, ',');
+
+        if (idStr.empty() || nameStr.empty() || birthStr.empty()) {
+            cerr << "[Warning] Malformed row in " << filename << ": " << line << "\n";
+            continue;
+        }
 
         int id = atoi(idStr.c_str());
         int birth = atoi(birthStr.c_str());
@@ -64,25 +85,32 @@ void MovieApp::readActors(const std::string& filename) {
 void MovieApp::readMovies(const std::string& filename) {
     ifstream fin(filename.c_str());
     if (!fin.is_open()) {
-        cerr << "Error: Could not open file \"" << filename << "\"\n";
+        cerr << "[Error] Could not open file: " << filename << "\n";
         return;
     }
 
-    // skip header
     string header;
-    getline(fin, header);
+    if (!getline(fin, header)) {
+        cerr << "[Error] File is empty: " << filename << "\n";
+        fin.close();
+        return;
+    }
 
     string line;
     while (getline(fin, line)) {
         if (line.empty()) continue;
 
-        // parse
-        // "id,title,year"
         stringstream ss(line);
         string idStr, titleStr, yearStr;
+
         getline(ss, idStr, ',');
         getline(ss, titleStr, ',');
         getline(ss, yearStr, ',');
+
+        if (idStr.empty() || titleStr.empty() || yearStr.empty()) {
+            cerr << "[Warning] Malformed row in " << filename << ": " << line << "\n";
+            continue;
+        }
 
         int id = atoi(idStr.c_str());
         int year = atoi(yearStr.c_str());
@@ -101,28 +129,35 @@ void MovieApp::readMovies(const std::string& filename) {
 void MovieApp::readCast(const std::string& filename) {
     ifstream fin(filename.c_str());
     if (!fin.is_open()) {
-        cerr << "Error: Could not open file \"" << filename << "\"\n";
+        cerr << "[Error] Could not open file: " << filename << "\n";
         return;
     }
-    // skip header
+
     string header;
-    getline(fin, header);
+    if (!getline(fin, header)) {
+        cerr << "[Error] File is empty: " << filename << "\n";
+        fin.close();
+        return;
+    }
 
     string line;
     while (getline(fin, line)) {
         if (line.empty()) continue;
-        // parse "person_id,movie_id"
+
         stringstream ss(line);
         string pidStr, midStr;
+
         getline(ss, pidStr, ',');
         getline(ss, midStr, ',');
 
-        if (pidStr.empty() || midStr.empty()) continue;
+        if (pidStr.empty() || midStr.empty()) {
+            cerr << "[Warning] Malformed row in " << filename << ": " << line << "\n";
+            continue;
+        }
 
         int personId = atoi(pidStr.c_str());
         int movieId = atoi(midStr.c_str());
 
-        // find the Actor and Movie
         Actor* foundActor = nullptr;
         actorList.display([&](Actor& a) {
             if (a.getId() == personId) {
@@ -148,23 +183,58 @@ void MovieApp::readCast(const std::string& filename) {
     fin.close();
 }
 
-//------------------------------------------------------------------------------
-// 2) "Add New" items
-//------------------------------------------------------------------------------
 
+//------------------------------------------------------------------------------
+// Add New Actor with Improved Validation
+//------------------------------------------------------------------------------
 void MovieApp::addNewActor(const std::string& name, int birthYear) {
-    Actor actor(name.c_str(), birthYear, nextActorId);
+    std::string trimmedName = trim(name);
+
+    // Validate name
+    if (trimmedName.empty()) {
+        cout << "[Error] Actor name cannot be empty or just spaces. Please try again.\n";
+        return; // Stop execution; don't move on to the next part
+    }
+
+    // Validate year of birth
+    if (birthYear <= 0 || birthYear >= 2025) {
+        cout << "[Error] Invalid birth year. Must be greater than 0 and less than 2025.\n";
+        return; // Stop execution if the year is invalid
+    }
+
+    // Add actor if valid
+    Actor actor(trimmedName.c_str(), birthYear, nextActorId);
     ++nextActorId;
     actorList.add(actor);
-    cout << "Added new actor: \"" << name << "\" (ID=" << actor.getId() << ")\n";
+    cout << "[Success] Added new actor: \"" << trimmedName << "\" (ID=" << actor.getId() << ")\n";
 }
 
+
+
+
 void MovieApp::addNewMovie(const std::string& title, const std::string& plot, int releaseYear) {
-    Movie movie(title.c_str(), plot.c_str(), releaseYear, nextMovieId);
+    std::string trimmedTitle = trim(title);
+
+    // Validate title
+    if (trimmedTitle.empty()) {
+        cout << "[Error] Movie title cannot be empty or just spaces. Please try again.\n";
+        return; // Stop execution; don't move on to ask for plot
+    }
+
+    // Validate release year
+    if (releaseYear <= 1800 || releaseYear >= 2025) {
+        cout << "[Error] Invalid release year. Must be greater than 1800 and less than 2025.\n";
+        return; // Stop execution if the year is invalid
+    }
+
+    // Add movie if valid
+    Movie movie(trimmedTitle.c_str(), plot.c_str(), releaseYear, nextMovieId);
     ++nextMovieId;
     movieList.add(movie);
-    cout << "Added new movie: \"" << title << "\" (ID=" << movie.getId() << ")\n";
+    cout << "[Success] Added new movie: \"" << trimmedTitle << "\" (ID=" << movie.getId() << ")\n";
 }
+
+
 
 //------------------------------------------------------------------------------
 // 3) Link actors & movies
@@ -207,15 +277,26 @@ void MovieApp::addActorToMovie(const std::string& actorName, const std::string& 
 // 4) Update actor/movie
 //------------------------------------------------------------------------------
 
+// Updated updateActorDetails with input validation
 void MovieApp::updateActorDetails(int actorId, const std::string& newName, int newYearOfBirth) {
     bool found = false;
     actorList.display([&](Actor& a) {
         if (a.getId() == actorId) {
+            if (newName.empty()) {
+                cout << "[Error] New actor name cannot be empty.\n";
+                found = true; // Prevents "not found" message
+                return true;
+            }
+            if (newYearOfBirth <= 0 || newYearOfBirth >= 2025) {
+                cout << "[Error] Invalid year of birth. Must be > 0 and < 2025.\n";
+                found = true;
+                return true;
+            }
             a.setName(newName.c_str());
             a.setBirthYear(newYearOfBirth);
             cout << "Updated Actor ID " << actorId
                 << " => Name: " << newName
-                << ", BirthYear: " << newYearOfBirth << endl;
+                << ", Birth Year: " << newYearOfBirth << endl;
             found = true;
             return true;
         }
@@ -226,17 +307,28 @@ void MovieApp::updateActorDetails(int actorId, const std::string& newName, int n
     }
 }
 
+// Updated updateMovieDetails with input validation
 void MovieApp::updateMovieDetails(int movieId, const std::string& newTitle, const std::string& newPlot, int newReleaseYear) {
     bool found = false;
     movieList.display([&](Movie& m) {
         if (m.getId() == movieId) {
+            if (newTitle.empty()) {
+                cout << "[Error] New movie title cannot be empty.\n";
+                found = true; // Prevents "not found" message
+                return true;
+            }
+            if (newReleaseYear <= 1800 || newReleaseYear >= 2025) {
+                cout << "[Error] Invalid release year. Must be > 1800 and < 2025.\n";
+                found = true;
+                return true;
+            }
             m.setTitle(newTitle.c_str());
             m.setPlot(newPlot.c_str());
             m.setReleaseYear(newReleaseYear);
             cout << "Updated Movie ID " << movieId
                 << " => Title: " << newTitle
                 << ", Plot: " << newPlot
-                << ", Year: " << newReleaseYear << endl;
+                << ", Release Year: " << newReleaseYear << endl;
             found = true;
             return true;
         }
