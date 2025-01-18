@@ -12,9 +12,19 @@ private:
     int   age;         // Age computed as 2025 - birthYear
 
 public:
+    // Default Constructor
     Actor();
+
+    // Parameterized Constructor
     Actor(const char* name, int birthYear, int id);
 
+    // Copy Constructor
+    Actor(const Actor& other);
+
+    // Copy Assignment Operator
+    Actor& operator=(const Actor& other);
+
+    // Getters and Setters
     int getId() const;
     void setId(int newId);
 
@@ -26,7 +36,8 @@ public:
 
     int getAge() const;
 
-    void displayDetails() const; // For printing
+    // Display actor details for printing or debugging
+    void displayDetails() const;
 };
 
 #endif // ACTOR_H

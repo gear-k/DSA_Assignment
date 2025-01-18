@@ -256,37 +256,93 @@ void MovieApp::displayAllActors() const {
         cout << "No actors found.\n";
         return;
     }
-    actorList.display([](const Actor& actor) {
-        actor.displayDetails();
-        return false; // continue
+
+    static const int MAX_ACTORS = 2000;
+    Actor actorArray[MAX_ACTORS];
+    int count = 0;
+
+    // Collect all actors into an array
+    actorList.display([&](const Actor& actor) {
+        if (count < MAX_ACTORS) {
+            actorArray[count++] = actor;
+        }
+        return false; // continue traversal
         });
+
+    // Sort actors alphabetically by name
+    for (int i = 0; i < count - 1; ++i) {
+        for (int j = 0; j < count - i - 1; ++j) {
+            if (strcmp(actorArray[j].getName(), actorArray[j + 1].getName()) > 0) {
+                std::swap(actorArray[j], actorArray[j + 1]);
+            }
+        }
+    }
+
+    // Display sorted actors
+    cout << "All Actors (alphabetical order):\n";
+    for (int i = 0; i < count; ++i) {
+        actorArray[i].displayDetails();
+    }
 }
+
 
 void MovieApp::displayAllMovies() const {
     if (movieList.isEmpty()) {
         cout << "No movies found.\n";
         return;
     }
-    movieList.display([](const Movie& movie) {
-        movie.displayDetails();
-        return false; // continue
+
+    static const int MAX_MOVIES = 2000;
+    Movie movieArray[MAX_MOVIES];
+    int count = 0;
+
+    // Collect all movies into an array
+    movieList.display([&](const Movie& movie) {
+        if (count < MAX_MOVIES) {
+            movieArray[count++] = movie;
+        }
+        return false; // continue traversal
         });
+
+    // Sort movies alphabetically by title
+    for (int i = 0; i < count - 1; ++i) {
+        for (int j = 0; j < count - i - 1; ++j) {
+            if (strcmp(movieArray[j].getTitle(), movieArray[j + 1].getTitle()) > 0) {
+                std::swap(movieArray[j], movieArray[j + 1]);
+            }
+        }
+    }
+
+    // Display sorted movies
+    cout << "All Movies (alphabetical order):\n";
+    for (int i = 0; i < count; ++i) {
+        movieArray[i].displayDetails();
+    }
 }
 
 void MovieApp::displayActorsByAge(int minAge, int maxAge) const {
+    if (actorList.isEmpty()) {
+        cout << "No actors found.\n";
+        return;
+    }
+
     bool anyFound = false;
+
+    // Display actors whose ages fall within the range [minAge, maxAge]
     actorList.display([&](const Actor& a) {
         int age = a.getAge();
         if (age >= minAge && age <= maxAge) {
             cout << a.getName() << " (Age=" << age << ")\n";
             anyFound = true;
         }
-        return false;
+        return false; // Continue traversal
         });
+
     if (!anyFound) {
-        cout << "No actors found in age range [" << minAge << ", " << maxAge << "].\n";
+        cout << "No actors found in the age range [" << minAge << ", " << maxAge << "].\n";
     }
 }
+
 
 void MovieApp::displayRecentMovies() const {
     const int cutoff = 2025 - 3;
@@ -304,37 +360,91 @@ void MovieApp::displayRecentMovies() const {
 }
 
 void MovieApp::displayMoviesOfActor(const std::string& actorName) const {
-    bool anyFound = false;
+    static const int MAX_MOVIES = 2000;
+    Movie foundMovies[MAX_MOVIES];
+    int foundCount = 0;
+
+    // Collect all movies that have this actor
     movieList.display([&](const Movie& m) {
         if (m.hasActor(actorName.c_str())) {
-            cout << m.getTitle() << " (" << m.getReleaseYear() << ")\n";
-            anyFound = true;
+            if (foundCount < MAX_MOVIES) {
+                foundMovies[foundCount++] = m;
+            }
         }
         return false;
         });
-    if (!anyFound) {
+
+    if (foundCount == 0) {
         cout << "No movies found for actor \"" << actorName << "\".\n";
+        return;
+    }
+
+    // Bubble Sort to sort movies by title
+    for (int i = 0; i < foundCount - 1; ++i) {
+        for (int j = 0; j < foundCount - i - 1; ++j) {
+            if (strcmp(foundMovies[j].getTitle(), foundMovies[j + 1].getTitle()) > 0) {
+                std::swap(foundMovies[j], foundMovies[j + 1]);
+            }
+        }
+    }
+
+    // Display sorted movies
+    cout << "Movies for actor \"" << actorName << "\" (alphabetical order):\n";
+    for (int i = 0; i < foundCount; ++i) {
+        cout << " - " << foundMovies[i].getTitle()
+            << " (" << foundMovies[i].getReleaseYear() << ")\n";
     }
 }
 
+
 void MovieApp::displayActorsInMovie(const std::string& movieTitle) const {
     bool foundMovie = false;
+
+    // Find the movie, then collect its actors
     movieList.display([&](const Movie& m) {
         if (strcmp(m.getTitle(), movieTitle.c_str()) == 0) {
             foundMovie = true;
-            cout << "Actors in \"" << movieTitle << "\":\n";
-            m.getActors().display([](const Actor& a) {
-                cout << " - " << a.getName() << endl;
+
+            static const int MAX_ACTORS = 2000;
+            Actor actorArray[MAX_ACTORS]; // Ensure Actor has a proper copy constructor
+            int count = 0;
+
+            // Collect all actors from the movie
+            m.getActors().display([&](const Actor& a) {
+                if (count < MAX_ACTORS) {
+                    actorArray[count++] = a; // Ensure proper assignment
+                }
+                else {
+                    std::cerr << "[Error] Too many actors in the movie \"" << movieTitle << "\".\n";
+                }
                 return false;
                 });
-            return true; // break
+
+            // Bubble Sort to sort actors by name
+            for (int i = 0; i < count - 1; ++i) {
+                for (int j = 0; j < count - i - 1; ++j) {
+                    if (strcmp(actorArray[j].getName(), actorArray[j + 1].getName()) > 0) {
+                        std::swap(actorArray[j], actorArray[j + 1]);
+                    }
+                }
+            }
+
+            // Display sorted actors
+            cout << "Actors in \"" << movieTitle << "\" (alphabetical order):\n";
+            for (int i = 0; i < count; ++i) {
+                cout << " - " << actorArray[i].getName()
+                    << " (Age: " << actorArray[i].getAge() << ")\n";
+            }
+            return true; // We found the movie, so stop the traversal
         }
         return false;
         });
+
     if (!foundMovie) {
         cout << "Movie \"" << movieTitle << "\" not found.\n";
     }
 }
+
 
 //------------------------------------------------------------------------------
 // BFS Utility (no STL) for displayActorsKnownBy
