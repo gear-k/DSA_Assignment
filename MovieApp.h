@@ -37,12 +37,17 @@ public:
     void readMovies(const std::string& filename);
     void readCast(const std::string& filename);
 
+    int getNextActorId() const;
+    int getNextMovieId() const;
+
+
     // "Add New" items
     void addNewActor(const std::string& name, int birthYear);
     void addNewMovie(const std::string& title, const std::string& plot, int releaseYear);
 
-    // Link actors & movies
-    void addActorToMovie(const std::string& actorName, const std::string& movieTitle);
+
+
+    void addActorToMovieById(int actorId, int movieId);
 
     // Update actor/movie
     void updateActorDetails(int actorId, const std::string& newName, int newYearOfBirth);
@@ -58,6 +63,13 @@ public:
 
     // The BFS version (2-level acquaintances):
     void displayActorsKnownBy(const std::string& actorName) const;
+    
+    void setActorRating(int actorId, int rating);
+    void setMovieRating(int movieId, int rating);
+
+    bool isActorIdUsed(int id) const;
+    bool isMovieIdUsed(int id) const;
+
 
     // New Test Function
     void runAllTests();

@@ -2,14 +2,14 @@
 #include <cstring> // for strncpy_s
 
 Movie::Movie()
-    : id(0), releaseYear(0)
+    : id(0), releaseYear(0), rating(0) // rating defaults to 0
 {
     title[0] = '\0';
     plot[0] = '\0';
 }
 
 Movie::Movie(const char* ttl, const char* plt, int rYear, int mid)
-    : id(mid), releaseYear(rYear)
+    : id(mid), releaseYear(rYear), rating(0)
 {
     if (ttl) {
         strncpy_s(title, sizeof(title), ttl, _TRUNCATE);
@@ -17,7 +17,6 @@ Movie::Movie(const char* ttl, const char* plt, int rYear, int mid)
     else {
         title[0] = '\0';
     }
-
     if (plt) {
         strncpy_s(plot, sizeof(plot), plt, _TRUNCATE);
     }
@@ -26,21 +25,24 @@ Movie::Movie(const char* ttl, const char* plt, int rYear, int mid)
     }
 }
 
-// Copy Constructor
+// Copy constructor
 Movie::Movie(const Movie& other)
-    : id(other.id), releaseYear(other.releaseYear), actors(other.actors)
+    : id(other.id),
+    releaseYear(other.releaseYear),
+    actors(other.actors),
+    rating(other.rating)
 {
     strncpy_s(title, sizeof(title), other.title, _TRUNCATE);
     strncpy_s(plot, sizeof(plot), other.plot, _TRUNCATE);
 }
 
-// Copy Assignment Operator
+// Copy assignment
 Movie& Movie::operator=(const Movie& other) {
     if (this != &other) {
         id = other.id;
         releaseYear = other.releaseYear;
         actors = other.actors;
-
+        rating = other.rating; // copy rating
         strncpy_s(title, sizeof(title), other.title, _TRUNCATE);
         strncpy_s(plot, sizeof(plot), other.plot, _TRUNCATE);
     }
@@ -112,7 +114,6 @@ bool Movie::hasActor(const char* actorName) const {
             std::cerr << "Error: Actor name is nullptr." << std::endl;
             return false;
         }
-        std::cout << "Comparing Actor Name: " << aName << " with " << actorName << std::endl;
         if (std::strcmp(aName, actorName) == 0) {
             found = true;
             return true; // Break out of the loop
@@ -131,9 +132,11 @@ const List<Actor>& Movie::getActors() const {
     return actors;
 }
 
+
 void Movie::displayDetails() const {
     std::cout << "Movie ID: " << id
         << ", Title: " << title
         << ", Year: " << releaseYear
+        << ", Rating: " << rating  // NEW: show rating
         << std::endl;
 }

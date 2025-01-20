@@ -13,7 +13,7 @@ private:
     char plot[500];
     int releaseYear;
     List<Actor> actors;
-
+    int rating; // Range: 0 to 10
 public:
     // Constructors
     Movie();
@@ -44,6 +44,9 @@ public:
     // Actor Management
     void addActor(const Actor& actor);
     bool hasActor(const char* actorName) const;
+
+    int getRating() const { return rating; }
+    void setRating(int r) { rating = r; }
 
     // Access to Actors List
     List<Actor>& getActors();

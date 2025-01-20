@@ -17,7 +17,7 @@ static std::string trimQuotes(const std::string& str) {
     }
     return str.substr(start, end - start + 1);
 }
-// Helper function to trim spaces
+
 
 
 // Helper function to trim leading and trailing spaces
@@ -74,10 +74,11 @@ void MovieApp::readActors(const std::string& filename) {
 
         Actor actor(nameStr.c_str(), birth, id);
         actorList.add(actor);
-
+        /*
         if (id >= nextActorId) {
             nextActorId = id + 1;
         }
+        */
     }
     fin.close();
 }
@@ -118,13 +119,40 @@ void MovieApp::readMovies(const std::string& filename) {
 
         Movie movie(titleStr.c_str(), "", year, id);
         movieList.add(movie);
-
+        /*
         if (id >= nextMovieId) {
             nextMovieId = id + 1;
         }
+        */
     }
     fin.close();
 }
+
+bool MovieApp::isActorIdUsed(int id) const {
+    bool used = false;
+    actorList.display([&](const Actor& a) {
+        if (a.getId() == id) {
+            used = true;
+            return true; // Stop traversal
+        }
+        return false;
+        });
+    return used;
+}
+
+bool MovieApp::isMovieIdUsed(int id) const {
+    bool used = false;
+    movieList.display([&](const Movie& m) {
+        if (m.getId() == id) {
+            used = true;
+            return true; // Stop traversal
+        }
+        return false;
+        });
+    return used;
+}
+
+
 
 void MovieApp::readCast(const std::string& filename) {
     ifstream fin(filename.c_str());
@@ -193,20 +221,25 @@ void MovieApp::addNewActor(const std::string& name, int birthYear) {
     // Validate name
     if (trimmedName.empty()) {
         cout << "[Error] Actor name cannot be empty or just spaces. Please try again.\n";
-        return; // Stop execution; don't move on to the next part
+        return;
     }
 
     // Validate year of birth
     if (birthYear <= 0 || birthYear >= 2025) {
         cout << "[Error] Invalid birth year. Must be greater than 0 and less than 2025.\n";
-        return; // Stop execution if the year is invalid
+        return;
+    }
+
+    // Find the next available Actor ID starting from 1000
+    while (isActorIdUsed(nextActorId)) {
+        nextActorId++;
     }
 
     // Add actor if valid
     Actor actor(trimmedName.c_str(), birthYear, nextActorId);
-    ++nextActorId;
-    actorList.add(actor);
     cout << "[Success] Added new actor: \"" << trimmedName << "\" (ID=" << actor.getId() << ")\n";
+    actorList.add(actor);
+    ++nextActorId;
 }
 
 
@@ -218,21 +251,27 @@ void MovieApp::addNewMovie(const std::string& title, const std::string& plot, in
     // Validate title
     if (trimmedTitle.empty()) {
         cout << "[Error] Movie title cannot be empty or just spaces. Please try again.\n";
-        return; // Stop execution; don't move on to ask for plot
+        return;
     }
 
     // Validate release year
     if (releaseYear <= 1800 || releaseYear >= 2025) {
         cout << "[Error] Invalid release year. Must be greater than 1800 and less than 2025.\n";
-        return; // Stop execution if the year is invalid
+        return;
+    }
+
+    // Find the next available Movie ID starting from 5000
+    while (isMovieIdUsed(nextMovieId)) {
+        nextMovieId++;
     }
 
     // Add movie if valid
     Movie movie(trimmedTitle.c_str(), plot.c_str(), releaseYear, nextMovieId);
-    ++nextMovieId;
-    movieList.add(movie);
     cout << "[Success] Added new movie: \"" << trimmedTitle << "\" (ID=" << movie.getId() << ")\n";
+    movieList.add(movie);
+    ++nextMovieId;
 }
+
 
 
 
@@ -240,38 +279,41 @@ void MovieApp::addNewMovie(const std::string& title, const std::string& plot, in
 // 3) Link actors & movies
 //------------------------------------------------------------------------------
 
-void MovieApp::addActorToMovie(const std::string& actorName, const std::string& movieTitle) {
-    Movie* targetMovie = nullptr;
-    movieList.display([&](Movie& m) {
-        if (strcmp(m.getTitle(), movieTitle.c_str()) == 0) {
-            targetMovie = &m;
-            return true;
-        }
-        return false;
-        });
-
-    if (!targetMovie) {
-        cout << "[Error] Movie \"" << movieTitle << "\" not found.\n";
-        return;
-    }
-
+void MovieApp::addActorToMovieById(int actorId, int movieId) {
+    // 1) Find the Actor
     Actor* targetActor = nullptr;
     actorList.display([&](Actor& a) {
-        if (strcmp(a.getName(), actorName.c_str()) == 0) {
+        if (a.getId() == actorId) {
             targetActor = &a;
-            return true;
+            return true; // Found
         }
         return false;
         });
-
     if (!targetActor) {
-        cout << "[Error] Actor \"" << actorName << "\" not found.\n";
+        cout << "[Error] Actor ID " << actorId << " not found.\n";
         return;
     }
 
+    // 2) Find the Movie
+    Movie* targetMovie = nullptr;
+    movieList.display([&](Movie& m) {
+        if (m.getId() == movieId) {
+            targetMovie = &m;
+            return true; // Found
+        }
+        return false;
+        });
+    if (!targetMovie) {
+        cout << "[Error] Movie ID " << movieId << " not found.\n";
+        return;
+    }
+
+    // 3) Link them
     targetMovie->addActor(*targetActor);
-    cout << "Actor \"" << actorName << "\" added to movie \"" << movieTitle << "\"\n";
+    cout << "Actor \"" << targetActor->getName()
+        << "\" added to movie \"" << targetMovie->getTitle() << "\"\n";
 }
+
 
 //------------------------------------------------------------------------------
 // 4) Update actor/movie
@@ -558,72 +600,198 @@ void MovieApp::displayActorsInMovie(const std::string& movieTitle) const {
     }
 }
 
+
 // THIS IS A TEST MAKE SURE TO REMOVE THIS BEFORE SUBMISSION CEDRICCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 void MovieApp::runAllTests() {
     cout << "\n========== Running All Tests ==========\n";
 
+    // **Reset IDs for testing purposes**
+    nextActorId = 1000;
+    nextMovieId = 5000;
+
+    // **Clear existing data to start fresh**
+    actorList.clear();
+    movieList.clear();
+
     // 1. Test Adding New Actors
-    cout << "\n-- Test: Adding New Actors --\n";
-    addNewActor("Leonardo DiCaprio", 1974);
-    addNewActor("Kate Winslet", 1975);
-    addNewActor("Brad Pitt", 1963);
+    cout << "\n-- Test 1: Adding New Actors --\n";
+    // Valid additions
+    addNewActor("Leonardo DiCaprio", 1974);       // ID=1000
+    addNewActor("Kate Winslet", 1975);            // ID=1001
+    addNewActor("Brad Pitt", 1963);               // ID=1002
+    addNewActor("Morgan Freeman", 1937);          // ID=1003
+    addNewActor("Scarlett Johansson", 1984);      // ID=1004
+    // Invalid additions
+    addNewActor("", 1980);                        // Invalid name
+    addNewActor("Tom Hanks", -5);                 // Invalid birth year
+    addNewActor(" ", 1990);                       // Invalid name
+    addNewActor("Morgan Freeman", 2026);          // Invalid birth year
     displayAllActors();
 
     // 2. Test Adding New Movies
-    cout << "\n-- Test: Adding New Movies --\n";
-    addNewMovie("Inception", "A thief who steals corporate secrets through dream-sharing technology.", 2010);
-    addNewMovie("Titanic", "A love story that unfolds aboard the ill-fated RMS Titanic.", 1997);
-    addNewMovie("Fight Club", "An insomniac office worker and a soap maker form an underground fight club.", 1999);
+    cout << "\n-- Test 2: Adding New Movies --\n";
+    // Valid additions
+    addNewMovie("Inception", "A thief who steals corporate secrets through dream-sharing technology.", 2010);          // ID=5000
+    addNewMovie("Titanic", "A love story that unfolds aboard the ill-fated RMS Titanic.", 1997);                         // ID=5001
+    addNewMovie("Fight Club", "An insomniac office worker and a soap maker form an underground fight club.", 1999);        // ID=5002
+    addNewMovie("Avengers: Endgame", "The Avengers assemble once more to save the universe.", 2024);                        // ID=5003
+    addNewMovie("The Shawshank Redemption", "Two imprisoned men bond over a number of years.", 1994);                      // ID=5004
+    // Invalid additions
+    addNewMovie("", "No plot", 2000);                                                    // Invalid title
+    addNewMovie("The Matrix", "A computer hacker learns about the true nature of his reality.", 1700); // Invalid year
+    addNewMovie(" ", "Plot", 2015);                                                      // Invalid title
+    addNewMovie("Future Movie", "A movie from the future.", 2027);                        // Invalid year
     displayAllMovies();
 
-    // 3. Test Adding Actors to Movies
-    cout << "\n-- Test: Adding Actors to Movies --\n";
-    addActorToMovie("Leonardo DiCaprio", "Inception");
-    addActorToMovie("Kate Winslet", "Titanic");
-    addActorToMovie("Brad Pitt", "Fight Club");
-    addActorToMovie("Leonardo DiCaprio", "Titanic"); // Leonardo in Titanic as well
-    displayActorsInMovie("Inception");
-    displayActorsInMovie("Titanic");
-    displayActorsInMovie("Fight Club");
-
     // 4. Test Updating Actor Details
-    cout << "\n-- Test: Updating Actor Details --\n";
-    // Assume actor IDs are assigned starting from 1 as per addNewActor implementation
-    updateActorDetails(1, "Leonardo Wilhelm DiCaprio", 1974);
-    updateActorDetails(2, "Katherine Winslet", 1975);
+    cout << "\n-- Test 4: Updating Actor Details --\n";
+    // Assume actor IDs start at 1000 based on your constructor
+    // Valid updates
+    updateActorDetails(1000, "Leonardo Wilhelm DiCaprio", 1974);
+    updateActorDetails(1001, "Katherine Winslet", 1975);
+    updateActorDetails(1002, "Bradley Pitt", 1963); // Corrected name
+    updateActorDetails(1003, "Morgan Freeman", 1937); // Valid update
+    // Invalid updates
+    updateActorDetails(9999, "Nonexistent Actor", 1980);          // Non-existent actor
+    updateActorDetails(1002, "", 1963);                           // Invalid name
+    updateActorDetails(1002, "Brad Pitt", -10);                   // Invalid year
+    updateActorDetails(1004, "Scarlett Johansson", 2026);         // Invalid birth year
     displayAllActors();
 
     // 5. Test Updating Movie Details
-    cout << "\n-- Test: Updating Movie Details --\n";
-    // Assume movie IDs are assigned starting from 1 as per addNewMovie implementation
-    updateMovieDetails(1, "Inception (Edited)", "A skilled thief is offered a chance to erase his past.", 2010);
+    cout << "\n-- Test 5: Updating Movie Details --\n";
+    // Assume movie IDs start at 5000 based on your constructor
+    // Valid updates
+    updateMovieDetails(5000, "Inception (Edited)", "A skilled thief is offered a chance to erase his past.", 2010);
+    updateMovieDetails(5001, "Titanic (Edited)", "An epic romance unfolds aboard the Titanic.", 1997);
+    updateMovieDetails(5002, "Fight Club (Edited)", "An underground fight club becomes something much more.", 1999);
+    updateMovieDetails(5003, "Avengers: Endgame (Edited)", "The Avengers save the universe once more.", 2024); // Valid update
+    updateMovieDetails(5004, "The Shawshank Redemption (Edited)", "Two imprisoned men bond over years.", 1994); // Valid update
+    // Invalid updates
+    updateMovieDetails(99999, "Unknown Movie", "No plot", 2020); // Non-existent movie
+    updateMovieDetails(5002, "", "New plot", 2000);             // Invalid title
+    updateMovieDetails(5002, "Fight Club (Edited Again)", "Updated plot", 1700); // Invalid year
     displayAllMovies();
 
-    // 6. Test Displaying Movies of an Actor
-    cout << "\n-- Test: Displaying Movies of an Actor --\n";
-    displayMoviesOfActor("Leonardo Wilhelm DiCaprio");
-    displayMoviesOfActor("Katherine Winslet");
-    displayMoviesOfActor("Brad Pitt");
+    // 3. Test Adding Actors to Movies
+    cout << "\n-- Test 3: Adding Actors to Movies --\n";
+    // Valid associations using IDs
+    addActorToMovieById(1000, 5000); // Leonardo DiCaprio to Inception (Edited)
+    addActorToMovieById(1001, 5001); // Katherine Winslet to Titanic (Edited)
+    addActorToMovieById(1002, 5002); // Bradley Pitt to Fight Club (Edited)
+    addActorToMovieById(1000, 5001); // Leonardo DiCaprio to Titanic (Edited) as well
+    addActorToMovieById(1004, 5003); // Scarlett Johansson to Avengers: Endgame (Edited)
+    addActorToMovieById(1003, 5004); // Morgan Freeman to The Shawshank Redemption (Edited)
+    addActorToMovieById(1002, 5004); // Bradley Pitt to The Shawshank Redemption (Edited)
+    addActorToMovieById(1000, 5004); // Leonardo DiCaprio to The Shawshank Redemption (Edited)
+    // Invalid associations using IDs
+    addActorToMovieById(9999, 5000); // Tom Hanks does not exist
+    addActorToMovieById(1000, 9999); // Unknown Movie does not exist
+    addActorToMovieById(1003, 5002); // Morgan Freeman to Fight Club (Edited)
+    addActorToMovieById(1000, 5002); // Leonardo DiCaprio to Fight Club (Edited)
+    displayActorsInMovie("Inception (Edited)");
+    displayActorsInMovie("Titanic (Edited)");
+    displayActorsInMovie("Fight Club (Edited)");
+    displayActorsInMovie("Avengers: Endgame (Edited)");
+    displayActorsInMovie("The Shawshank Redemption (Edited)");
+    displayActorsInMovie("Unknown Movie"); // Should show error
 
-    // 7. Test Displaying Actors by Age Range
-    cout << "\n-- Test: Displaying Actors by Age Range (40-60) --\n";
+    // 6. Test Displaying All Actors
+    cout << "\n-- Test 6: Displaying All Actors --\n";
+    displayAllActors();
+
+    // 7. Test Displaying All Movies
+    cout << "\n-- Test 7: Displaying All Movies --\n";
+    displayAllMovies();
+
+    // 8. Test Displaying Actors by Age Range
+    cout << "\n-- Test 8: Displaying Actors by Age Range (40-60) --\n";
     displayActorsByAge(40, 60);
+    // Edge case tests
+    cout << "\n-- Test 8.1: Displaying Actors by Age Range (0-100) --\n";
+    displayActorsByAge(0, 100);   // Full range
+    cout << "\n-- Test 8.2: Displaying Actors by Age Range (70-60) --\n";
+    displayActorsByAge(70, 60);   // Invalid range (maxAge < minAge)
+    cout << "\n-- Test 8.3: Displaying Actors by Age Range (25-30) --\n";
+    displayActorsByAge(25, 30);   // Range with no actors
+    cout << "\n-- Test 8.4: Displaying Actors by Age Range (100-150) --\n";
+    displayActorsByAge(100, 150); // High range with no results
 
-    // 8. Test Displaying Recent Movies (Released in Last 3 Years)
-    cout << "\n-- Test: Displaying Recent Movies (Released in Last 3 Years) --\n";
+    // 9. Test Displaying Recent Movies (Released in Last 3 Years)
+    cout << "\n-- Test 9: Displaying Recent Movies (Released in Last 3 Years) --\n";
+    displayRecentMovies();
+    // Add a recent movie to ensure functionality
+    addNewMovie("New Blockbuster", "A newly released blockbuster movie.", 2024); // ID=5005
+    addActorToMovieById(1000, 5005); // Leonardo Wilhelm DiCaprio to New Blockbuster
+    addActorToMovieById(1001, 5005); // Katherine Winslet to New Blockbuster
+    displayRecentMovies();
+    // Add an invalid recent movie
+    addNewMovie("Future Movie", "A movie from the future.", 2027); // Invalid year
     displayRecentMovies();
 
-    // 9. Test Displaying Actors Known by an Actor
-    cout << "\n-- Test: Displaying Actors Known by an Actor --\n";
-    // For simplicity, assuming 'known by' is predefined or not implemented
-    // You may need to implement relationships for this feature
-    // Here, we'll just display based on current data
+    // 10. Test Displaying Movies of an Actor
+    cout << "\n-- Test 10: Displaying Movies of an Actor --\n";
+    displayMoviesOfActor("Leonardo Wilhelm DiCaprio");
+    displayMoviesOfActor("Katherine Winslet");
+    displayMoviesOfActor("Bradley Pitt");
+    displayMoviesOfActor("Scarlett Johansson");
+    displayMoviesOfActor("Morgan Freeman");
+    displayMoviesOfActor("Tom Hanks"); // Non-existent actor
+
+    // 11. Test Displaying Actors in a Movie
+    cout << "\n-- Test 11: Displaying Actors in a Movie --\n";
+    displayActorsInMovie("Inception (Edited)");
+    displayActorsInMovie("Titanic (Edited)");
+    displayActorsInMovie("Fight Club (Edited)");
+    displayActorsInMovie("Avengers: Endgame (Edited)");
+    displayActorsInMovie("The Shawshank Redemption (Edited)");
+    displayActorsInMovie("Unknown Movie"); // Should show error
+
+    // 12. Test Displaying Actors Known by an Actor
+    cout << "\n-- Test 12: Displaying Actors Known by an Actor --\n";
     displayActorsKnownBy("Leonardo Wilhelm DiCaprio");
     displayActorsKnownBy("Katherine Winslet");
-    displayActorsKnownBy("Brad Pitt");
+    displayActorsKnownBy("Bradley Pitt");
+    displayActorsKnownBy("Scarlett Johansson");
+    displayActorsKnownBy("Morgan Freeman");
+    displayActorsKnownBy("Tom Hanks"); // Non-existent actor
+    displayActorsKnownBy("");          // Invalid actor name
+
+    // 15. Test Setting Actor Rating
+    cout << "\n-- Test 15: Setting Actor Ratings --\n";
+    // Valid ratings
+    setActorRating(1000, 9); // Leonardo
+    setActorRating(1001, 8); // Katherine
+    setActorRating(1002, 7); // Bradley
+    setActorRating(1003, 10); // Morgan
+    setActorRating(1004, 6); // Scarlett
+    // Invalid ratings
+    setActorRating(9999, 5); // Non-existent actor
+    setActorRating(1000, 11); // Invalid rating
+    setActorRating(1001, 0); // Invalid rating
+    setActorRating(1001, -2); // Invalid rating
+    displayAllActors();
+
+    // 16. Test Setting Movie Rating
+    cout << "\n-- Test 16: Setting Movie Ratings --\n";
+    // Valid ratings
+    setMovieRating(5000, 9); // Inception (Edited)
+    setMovieRating(5001, 8); // Titanic (Edited)
+    setMovieRating(5002, 7); // Fight Club (Edited)
+    setMovieRating(5003, 10); // Avengers: Endgame (Edited)
+    setMovieRating(5004, 6); // The Shawshank Redemption (Edited)
+    setMovieRating(5005, 8); // New Blockbuster
+    // Invalid ratings
+    setMovieRating(99999, 5); // Non-existent movie
+    setMovieRating(5000, 11); // Invalid rating
+    setMovieRating(5001, 0); // Invalid rating
+    displayAllMovies();
 
     cout << "\n========== All Tests Completed ==========\n";
 }
+
+
+
 
 //------------------------------------------------------------------------------
 // BFS Utility (no STL) for displayActorsKnownBy
@@ -776,4 +944,57 @@ void MovieApp::displayActorsKnownBy(const std::string& actorName) const {
             });
         return false;
         });
+}
+
+int MovieApp::getNextActorId() const {
+    return nextActorId;
+}
+
+int MovieApp::getNextMovieId() const {
+    return nextMovieId;
+}
+
+
+
+void MovieApp::setActorRating(int actorId, int rating) {
+    // Enforce 1–10
+    if (rating < 1 || rating > 10) {
+        cout << "[Error] Invalid rating value. Must be between 1 and 10.\n";
+        return;
+    }
+    bool found = false;
+    actorList.display([&](Actor& a) {
+        if (a.getId() == actorId) {
+            a.setRating(rating);
+            cout << "[Success] Actor (ID=" << actorId << ") rating updated to " << rating << "\n";
+            found = true;
+            return true;
+        }
+        return false;
+        });
+    if (!found) {
+        cout << "[Error] Actor ID " << actorId << " not found.\n";
+    }
+}
+
+
+void MovieApp::setMovieRating(int movieId, int rating) {
+    // Enforce 1–10
+    if (rating < 1 || rating > 10) {
+        cout << "[Error] Invalid rating value. Must be between 1 and 10.\n";
+        return;
+    }
+    bool found = false;
+    movieList.display([&](Movie& m) {
+        if (m.getId() == movieId) {
+            m.setRating(rating);
+            cout << "[Success] Movie (ID=" << movieId << ") rating updated to " << rating << "\n";
+            found = true;
+            return true;
+        }
+        return false;
+        });
+    if (!found) {
+        cout << "[Error] Movie ID " << movieId << " not found.\n";
+    }
 }

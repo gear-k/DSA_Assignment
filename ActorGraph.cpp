@@ -7,10 +7,6 @@ bool ActorGraph::BFSQueue::isEmpty() const {
     return count == 0;
 }
 
-bool ActorGraph::BFSQueue::isFull() const {
-    return count == 2000;
-}
-
 bool ActorGraph::BFSQueue::enqueue(int i, int d) {
     if (isFull()) return false;
     rear = (rear + 1) % 2000;
@@ -19,6 +15,11 @@ bool ActorGraph::BFSQueue::enqueue(int i, int d) {
     count++;
     return true;
 }
+
+bool ActorGraph::BFSQueue::isFull() const {
+    return count == 2000;
+}
+
 
 bool ActorGraph::BFSQueue::dequeue(Pair& out) {
     if (isEmpty()) return false;

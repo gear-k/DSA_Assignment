@@ -10,6 +10,7 @@ private:
     int id;
     int birthYear;
     int age;
+    int rating; // Range: 0 (no rating) to 10 (max)
 
 public:
     // Constructors
@@ -39,6 +40,10 @@ public:
     bool operator==(const Actor& other) const {
         return id == other.id;
     }
+
+    // NEW: Rating getter & setter
+    int getRating() const { return rating; }
+    void setRating(int r) { rating = r; }
 };
 
 #endif // ACTOR_H

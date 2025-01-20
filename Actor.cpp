@@ -4,34 +4,40 @@
 
 // Default Constructor
 Actor::Actor()
-    : id(0), birthYear(0), age(0) {
-    name[0] = '\0'; // Initialize name as an empty string
+    : id(0), birthYear(0), age(0), rating(0) // initialize rating to 0
+{
+    name[0] = '\0';
 }
 
 // Parameterized Constructor
 Actor::Actor(const char* nm, int birth, int aid)
-    : id(aid), birthYear(birth) {
+    : id(aid), birthYear(birth), rating(0) // default rating = 0
+{
     if (nm) {
         strncpy_s(name, sizeof(name), nm, _TRUNCATE);
     }
     else {
-        name[0] = '\0'; // Initialize name as empty string
+        name[0] = '\0';
     }
-    age = 2025 - birthYear; // Precompute age
+    age = 2025 - birthYear;
 }
 
-// Copy Constructor
+// Copy constructor
 Actor::Actor(const Actor& other)
-    : id(other.id), birthYear(other.birthYear), age(other.age) {
+    : id(other.id),
+    birthYear(other.birthYear),
+    age(other.age),
+    rating(other.rating)
+{
     strncpy_s(name, sizeof(name), other.name, _TRUNCATE);
 }
-
-// Copy Assignment Operator
+// Copy assignment
 Actor& Actor::operator=(const Actor& other) {
-    if (this != &other) { // Prevent self-assignment
+    if (this != &other) {
         id = other.id;
         birthYear = other.birthYear;
         age = other.age;
+        rating = other.rating; // copy rating
         strncpy_s(name, sizeof(name), other.name, _TRUNCATE);
     }
     return *this;
@@ -75,5 +81,6 @@ void Actor::displayDetails() const {
         << ", Name: " << name
         << ", Birth Year: " << birthYear
         << ", Age: " << age
+        << ", Rating: " << rating   // NEW: show rating
         << std::endl;
 }
