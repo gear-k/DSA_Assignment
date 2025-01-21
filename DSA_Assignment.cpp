@@ -100,10 +100,10 @@ void displayMenu() {
     std::cout << "12. Display Actors Known by an Actor\n";
     std::cout << "13. Exit\n";
     std::cout << "14. Run All Tests\n";
-    // NEW
     std::cout << "15. Set Actor Rating\n";
     std::cout << "16. Set Movie Rating\n";
-
+    std::cout << "17. Recommend Movies by Rating\n";
+    std::cout << "18. Recommend Actors by Rating\n";
     std::cout << "Enter your choice: ";
 }
 
@@ -542,13 +542,59 @@ int main() {
             app.setMovieRating(movieId, newRating);
             break;
         }
+        
+        case 17: {
+            // Recommend movies by rating range
+            int minRating = promptForInt(
+                "Enter minimum movie rating for recommendations (1-10, '0' to cancel): ",
+                1, 10, true
+            );
+            if (minRating == 0) {
+                std::cout << "[Cancelled]\n";
+                break;
+            }
 
-               //--------------------------------
-               // Invalid choice
-               //--------------------------------
+            int maxRating = promptForInt(
+                "Enter maximum movie rating for recommendations (>= minRating, '0' to cancel): ",
+                minRating, 10, true
+            );
+            if (maxRating == 0) {
+                std::cout << "[Cancelled]\n";
+                break;
+            }
+
+            app.recommendMoviesByRating(minRating, maxRating);
+            break;
+        }
+
+        case 18: {
+            // Recommend actors by rating range
+            int minRating = promptForInt(
+                "Enter minimum actor rating for recommendations (1-10, '0' to cancel): ",
+                1, 10, true
+            );
+            if (minRating == 0) {
+                std::cout << "[Cancelled]\n";
+                break;
+            }
+
+            int maxRating = promptForInt(
+                "Enter maximum actor rating for recommendations (>= minRating, '0' to cancel): ",
+                minRating, 10, true
+            );
+            if (maxRating == 0) {
+                std::cout << "[Cancelled]\n";
+                break;
+            }
+
+            app.recommendActorsByRating(minRating, maxRating);
+            break;
+        }
+
         default:
             std::cout << "[Error] Invalid menu choice!\n";
-        }
+}
+
 
     endSwitch:;
         std::cout << std::endl;

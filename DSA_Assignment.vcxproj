@@ -132,6 +132,7 @@
     <ClCompile Include="DSA_Assignment.cpp" />
     <ClCompile Include="Movie.cpp" />
     <ClCompile Include="MovieApp.cpp" />
+    <ClCompile Include="RatingBST.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Actor.h" />
@@ -139,6 +140,7 @@
     <ClInclude Include="List.h" />
     <ClInclude Include="Movie.h" />
     <ClInclude Include="MovieApp.h" />
+    <ClInclude Include="RatingBST.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="actors.csv" />

@@ -34,7 +34,7 @@ static std::string trim(const std::string& str) {
 
 
 MovieApp::MovieApp()
-    : nextActorId(1000), nextMovieId(5000) {
+    : nextActorId(1000), nextMovieId(5000) , movieRatings(), actorRatings() {
 }
 
 //------------------------------------------------------------------------------
@@ -787,7 +787,22 @@ void MovieApp::runAllTests() {
     setMovieRating(5001, 0); // Invalid rating
     displayAllMovies();
 
+    // 17. Test Recommend Movies by Rating
+    cout << "\n-- Test 17: Recommend Movies by Rating --\n";
+    // Assuming a recommendMoviesByRating() function exists
+    cout << "Top Rated Movies (Threshold: 8):\n";
+    recommendMoviesByRating(8,10); // Display movies with rating >= 8
+
+    // 18. Test Recommend Actors by Rating
+    cout << "\n-- Test 18: Recommend Actors by Rating --\n";
+    // Assuming a recommendActorsByRating() function exists
+    cout << "Top Rated Actors (Threshold: 8):\n";
+    recommendActorsByRating(8,10); // Display actors with rating >= 8
+
     cout << "\n========== All Tests Completed ==========\n";
+
+
+
 }
 
 
@@ -955,46 +970,62 @@ int MovieApp::getNextMovieId() const {
 }
 
 
-
 void MovieApp::setActorRating(int actorId, int rating) {
-    // Enforce 1–10
+    // Ensure the rating is between 1 and 10
     if (rating < 1 || rating > 10) {
         cout << "[Error] Invalid rating value. Must be between 1 and 10.\n";
         return;
     }
+
     bool found = false;
     actorList.display([&](Actor& a) {
         if (a.getId() == actorId) {
-            a.setRating(rating);
+            a.setRating(rating);      // Update the actor's rating
+            actorRatings.insert(a);  // Insert the actor into the BST
             cout << "[Success] Actor (ID=" << actorId << ") rating updated to " << rating << "\n";
             found = true;
-            return true;
+            return true; // Stop traversal
         }
         return false;
         });
+
     if (!found) {
         cout << "[Error] Actor ID " << actorId << " not found.\n";
     }
 }
 
-
 void MovieApp::setMovieRating(int movieId, int rating) {
-    // Enforce 1–10
+    // Ensure the rating is between 1 and 10
     if (rating < 1 || rating > 10) {
         cout << "[Error] Invalid rating value. Must be between 1 and 10.\n";
         return;
     }
+
     bool found = false;
     movieList.display([&](Movie& m) {
         if (m.getId() == movieId) {
-            m.setRating(rating);
+            m.setRating(rating);      // Update the movie's rating
+            movieRatings.insert(m);  // Insert the movie into the BST
             cout << "[Success] Movie (ID=" << movieId << ") rating updated to " << rating << "\n";
             found = true;
-            return true;
+            return true; // Stop traversal
         }
         return false;
         });
+
     if (!found) {
         cout << "[Error] Movie ID " << movieId << " not found.\n";
     }
 }
+
+void MovieApp::recommendMoviesByRating(int minRating, int maxRating) const {
+    cout << "Movies with ratings between " << minRating << " and " << maxRating << ":\n";
+    movieRatings.displayMoviesInRange(minRating, maxRating);
+}
+
+void MovieApp::recommendActorsByRating(int minRating, int maxRating) const {
+    cout << "Actors with ratings between " << minRating << " and " << maxRating << ":\n";
+    actorRatings.displayActorsInRange(minRating, maxRating);
+}
+
+

@@ -4,22 +4,20 @@
 #include "Actor.h"
 #include "Movie.h"
 #include "List.h"
+#include "RatingBST.h"
 
 class MovieApp {
 private:
     List<Actor> actorList;
     List<Movie> movieList;
+    RatingBST movieRatings;
+    RatingBST actorRatings;
+    
 
     int nextActorId;
     int nextMovieId;
 
-    // For BFS adjacency, we need:
-    // - A way to store every actor's ID in an array
-    // - A way to store adjacency as "actorIndex -> list of actorIndices"
-    // We'll build these on-the-fly in "displayActorsKnownBy" to avoid using STL.
-
-    // Helper: build an in-memory graph of adjacency
-    // We'll store arrays: actorIds[], adjacencyLists[] (where adjacencyLists[i] is a List<int>)
+    
     void buildActorGraph(
         int actorIds[],
         int& actorCount,
@@ -36,7 +34,8 @@ public:
     void readActors(const std::string& filename);
     void readMovies(const std::string& filename);
     void readCast(const std::string& filename);
-
+    void recommendMoviesByRating(int minRating, int maxRating) const;
+    void recommendActorsByRating(int minRating, int maxRating) const;
     int getNextActorId() const;
     int getNextMovieId() const;
 
