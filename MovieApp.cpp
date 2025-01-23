@@ -385,40 +385,75 @@ void MovieApp::updateMovieDetails(int movieId, const std::string& newTitle, cons
 // 5) Display
 //------------------------------------------------------------------------------
 
-void MovieApp::displayAllActors() const {
-    if (actorList.isEmpty()) {
-        cout << "No actors found.\n";
-        return;
-    }
+// Merge sort for Movie array
+void mergeSortMovies(Movie* arr, int left, int right) {
+    if (left < right) {
+        int mid = left + (right - left) / 2;
 
-    static const int MAX_ACTORS = 2000;
-    Actor actorArray[MAX_ACTORS];
-    int count = 0;
+        // Sort first and second halves
+        mergeSortMovies(arr, left, mid);
+        mergeSortMovies(arr, mid + 1, right);
 
-    // Collect all actors into an array
-    actorList.display([&](const Actor& actor) {
-        if (count < MAX_ACTORS) {
-            actorArray[count++] = actor;
-        }
-        return false; // continue traversal
-        });
+        // Merge the sorted halves
+        Movie* temp = new Movie[right - left + 1];
+        int i = left, j = mid + 1, k = 0;
 
-    // Sort actors alphabetically by name
-    for (int i = 0; i < count - 1; ++i) {
-        for (int j = 0; j < count - i - 1; ++j) {
-            if (strcmp(actorArray[j].getName(), actorArray[j + 1].getName()) > 0) {
-                std::swap(actorArray[j], actorArray[j + 1]);
+        while (i <= mid && j <= right) {
+            if (strcmp(arr[i].getTitle(), arr[j].getTitle()) <= 0) {
+                temp[k++] = arr[i++];
+            }
+            else {
+                temp[k++] = arr[j++];
             }
         }
-    }
 
-    // Display sorted actors
-    cout << "All Actors (alphabetical order):\n";
-    for (int i = 0; i < count; ++i) {
-        actorArray[i].displayDetails();
+        // Copy remaining elements
+        while (i <= mid) temp[k++] = arr[i++];
+        while (j <= right) temp[k++] = arr[j++];
+
+        // Copy sorted elements back into original array
+        for (int i = 0; i < k; ++i) {
+            arr[left + i] = temp[i];
+        }
+
+        delete[] temp;
     }
 }
 
+// Merge sort for Actor array
+void mergeSortActors(Actor* arr, int left, int right) {
+    if (left < right) {
+        int mid = left + (right - left) / 2;
+
+        // Sort first and second halves
+        mergeSortActors(arr, left, mid);
+        mergeSortActors(arr, mid + 1, right);
+
+        // Merge the sorted halves
+        Actor* temp = new Actor[right - left + 1];
+        int i = left, j = mid + 1, k = 0;
+
+        while (i <= mid && j <= right) {
+            if (strcmp(arr[i].getName(), arr[j].getName()) <= 0) {
+                temp[k++] = arr[i++];
+            }
+            else {
+                temp[k++] = arr[j++];
+            }
+        }
+
+        // Copy remaining elements
+        while (i <= mid) temp[k++] = arr[i++];
+        while (j <= right) temp[k++] = arr[j++];
+
+        // Copy sorted elements back into original array
+        for (int i = 0; i < k; ++i) {
+            arr[left + i] = temp[i];
+        }
+
+        delete[] temp;
+    }
+}
 
 void MovieApp::displayAllMovies() const {
     if (movieList.isEmpty()) {
@@ -427,37 +462,25 @@ void MovieApp::displayAllMovies() const {
     }
 
     static const int MAX_MOVIES = 2000;
-    // Allocate on the heap
     Movie* movieArray = new Movie[MAX_MOVIES];
     int count = 0;
 
-    // Collect all movies into the array
+    // Collect movies into an array
     movieList.display([&](const Movie& movie) {
         if (count < MAX_MOVIES) {
             movieArray[count++] = movie;
         }
-        return false; // Continue traversal
+        return false;
         });
 
     if (count == 0) {
         std::cout << "No movies found.\n";
-        delete[] movieArray; // Clean up
+        delete[] movieArray;
         return;
     }
 
-    // Bubble Sort to sort movies by title
-    for (int i = 0; i < count - 1; ++i) {
-        bool swapped = false; // Optimization to stop if no swaps occurred
-        for (int j = 0; j < count - i - 1; ++j) {
-            if (std::strcmp(movieArray[j].getTitle(), movieArray[j + 1].getTitle()) > 0) {
-                std::swap(movieArray[j], movieArray[j + 1]);
-                swapped = true;
-            }
-        }
-        if (!swapped) {
-            break; // Array is already sorted
-        }
-    }
+    // Use merge sort to sort movies alphabetically by title
+    mergeSortMovies(movieArray, 0, count - 1);
 
     // Display sorted movies
     std::cout << "All Movies (alphabetical order):\n";
@@ -465,9 +488,45 @@ void MovieApp::displayAllMovies() const {
         movieArray[i].displayDetails();
     }
 
-    // Clean up heap memory
     delete[] movieArray;
 }
+
+void MovieApp::displayAllActors() const {
+    if (actorList.isEmpty()) {
+        std::cout << "No actors found.\n";
+        return;
+    }
+
+    static const int MAX_ACTORS = 2000;
+    Actor* actorArray = new Actor[MAX_ACTORS];
+    int count = 0;
+
+    // Collect actors into an array
+    actorList.display([&](const Actor& actor) {
+        if (count < MAX_ACTORS) {
+            actorArray[count++] = actor;
+        }
+        return false;
+        });
+
+    if (count == 0) {
+        std::cout << "No actors found.\n";
+        delete[] actorArray;
+        return;
+    }
+
+    // Use merge sort to sort actors alphabetically by name
+    mergeSortActors(actorArray, 0, count - 1);
+
+    // Display sorted actors
+    std::cout << "All Actors (alphabetical order):\n";
+    for (int i = 0; i < count; ++i) {
+        actorArray[i].displayDetails();
+    }
+
+    delete[] actorArray;
+}
+
 
 void MovieApp::displayActorsByAge(int minAge, int maxAge) const {
     if (actorList.isEmpty()) {
