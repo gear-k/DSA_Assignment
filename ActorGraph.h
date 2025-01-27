@@ -26,7 +26,7 @@ public:
         bool enqueue(int i, int d);
         bool dequeue(Pair& out);
     };
-
+    
     // Main graph building and search functions
     static void buildActorGraph(
         const List<Actor>& actorList,

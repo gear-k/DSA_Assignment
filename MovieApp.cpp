@@ -34,7 +34,23 @@ static std::string trim(const std::string& str) {
 
 
 MovieApp::MovieApp()
-    : nextActorId(1000), nextMovieId(5000) , movieRatings(), actorRatings() {
+    : nextActorId(1000), nextMovieId(5000), movieRatings(), actorRatings() {
+}
+
+//------------------------------------------------------------------------------
+// NEW: Set admin mode
+void MovieApp::setAdminMode(bool admin) {
+    isAdmin = admin;
+    if (isAdmin) {
+        cout << "[Mode] Administrator mode enabled.\n";
+    }
+    else {
+        cout << "[Mode] User mode enabled.\n";
+    }
+}
+// NEW: Check if in admin mode
+bool MovieApp::isAdminMode() const {
+    return isAdmin;
 }
 
 //------------------------------------------------------------------------------
@@ -216,26 +232,24 @@ void MovieApp::readCast(const std::string& filename) {
 // Add New Actor with Improved Validation
 //------------------------------------------------------------------------------
 void MovieApp::addNewActor(const std::string& name, int birthYear) {
-    std::string trimmedName = trim(name);
+    if (!isAdmin) { // Check if the current mode is admin
+        cout << "[Error] Only administrators can add new actors.\n";
+        return;
+    }
 
-    // Validate name
+    // Existing logic to add a new actor
+    std::string trimmedName = trim(name);
     if (trimmedName.empty()) {
         cout << "[Error] Actor name cannot be empty or just spaces. Please try again.\n";
         return;
     }
-
-    // Validate year of birth
     if (birthYear <= 0 || birthYear >= 2025) {
         cout << "[Error] Invalid birth year. Must be greater than 0 and less than 2025.\n";
         return;
     }
-
-    // Find the next available Actor ID starting from 1000
     while (isActorIdUsed(nextActorId)) {
         nextActorId++;
     }
-
-    // Add actor if valid
     Actor actor(trimmedName.c_str(), birthYear, nextActorId);
     cout << "[Success] Added new actor: \"" << trimmedName << "\" (ID=" << actor.getId() << ")\n";
     actorList.add(actor);
@@ -246,26 +260,24 @@ void MovieApp::addNewActor(const std::string& name, int birthYear) {
 
 
 void MovieApp::addNewMovie(const std::string& title, const std::string& plot, int releaseYear) {
-    std::string trimmedTitle = trim(title);
+    if (!isAdmin) { // Check if the current mode is admin
+        cout << "[Error] Only administrators can add new movies.\n";
+        return;
+    }
 
-    // Validate title
+    // Existing logic to add a new movie
+    std::string trimmedTitle = trim(title);
     if (trimmedTitle.empty()) {
         cout << "[Error] Movie title cannot be empty or just spaces. Please try again.\n";
         return;
     }
-
-    // Validate release year
     if (releaseYear <= 1800 || releaseYear >= 2025) {
         cout << "[Error] Invalid release year. Must be greater than 1800 and less than 2025.\n";
         return;
     }
-
-    // Find the next available Movie ID starting from 5000
     while (isMovieIdUsed(nextMovieId)) {
         nextMovieId++;
     }
-
-    // Add movie if valid
     Movie movie(trimmedTitle.c_str(), plot.c_str(), releaseYear, nextMovieId);
     cout << "[Success] Added new movie: \"" << trimmedTitle << "\" (ID=" << movie.getId() << ")\n";
     movieList.add(movie);
@@ -279,7 +291,13 @@ void MovieApp::addNewMovie(const std::string& title, const std::string& plot, in
 // 3) Link actors & movies
 //------------------------------------------------------------------------------
 
-void MovieApp::addActorToMovieById(int actorId, int movieId) {
+void MovieApp::addActorToMovieById(int actorId, int movieId, bool isAdmin) {
+    // Check if the user is an administrator
+    if (!isAdmin) {
+        std::cout << "[Error] Only administrators can add actors to movies.\n";
+        return;
+    }
+
     // 1) Find the Actor
     Actor* targetActor = nullptr;
     actorList.display([&](Actor& a) {
@@ -290,7 +308,7 @@ void MovieApp::addActorToMovieById(int actorId, int movieId) {
         return false;
         });
     if (!targetActor) {
-        cout << "[Error] Actor ID " << actorId << " not found.\n";
+        std::cout << "[Error] Actor ID " << actorId << " not found.\n";
         return;
     }
 
@@ -304,23 +322,30 @@ void MovieApp::addActorToMovieById(int actorId, int movieId) {
         return false;
         });
     if (!targetMovie) {
-        cout << "[Error] Movie ID " << movieId << " not found.\n";
+        std::cout << "[Error] Movie ID " << movieId << " not found.\n";
         return;
     }
 
     // 3) Link them
     targetMovie->addActor(*targetActor);
-    cout << "Actor \"" << targetActor->getName()
+    std::cout << "Actor \"" << targetActor->getName()
         << "\" added to movie \"" << targetMovie->getTitle() << "\"\n";
 }
+
 
 
 //------------------------------------------------------------------------------
 // 4) Update actor/movie
 //------------------------------------------------------------------------------
 
-// Updated updateActorDetails with input validation
+// Update actor/movie details (admin-only)
 void MovieApp::updateActorDetails(int actorId, const std::string& newName, int newYearOfBirth) {
+    if (!isAdmin) { // Check if the current mode is admin
+        cout << "[Error] Only administrators can update actor details.\n";
+        return;
+    }
+
+    // Existing logic to update actor details
     bool found = false;
     actorList.display([&](Actor& a) {
         if (a.getId() == actorId) {
@@ -349,8 +374,13 @@ void MovieApp::updateActorDetails(int actorId, const std::string& newName, int n
     }
 }
 
-// Updated updateMovieDetails with input validation
 void MovieApp::updateMovieDetails(int movieId, const std::string& newTitle, const std::string& newPlot, int newReleaseYear) {
+    if (!isAdmin) { // Check if the current mode is admin
+        cout << "[Error] Only administrators can update movie details.\n";
+        return;
+    }
+
+    // Existing logic to update movie details
     bool found = false;
     movieList.display([&](Movie& m) {
         if (m.getId() == movieId) {
@@ -611,6 +641,7 @@ void MovieApp::displayMoviesOfActor(const std::string& actorName) const {
 
 
 
+
 void MovieApp::displayActorsInMovie(const std::string& movieTitle) const {
     bool foundMovie = false;
 
@@ -735,19 +766,19 @@ void MovieApp::runAllTests() {
     // 3. Test Adding Actors to Movies
     cout << "\n-- Test 3: Adding Actors to Movies --\n";
     // Valid associations using IDs
-    addActorToMovieById(1000, 5000); // Leonardo DiCaprio to Inception (Edited)
-    addActorToMovieById(1001, 5001); // Katherine Winslet to Titanic (Edited)
-    addActorToMovieById(1002, 5002); // Bradley Pitt to Fight Club (Edited)
-    addActorToMovieById(1000, 5001); // Leonardo DiCaprio to Titanic (Edited) as well
-    addActorToMovieById(1004, 5003); // Scarlett Johansson to Avengers: Endgame (Edited)
-    addActorToMovieById(1003, 5004); // Morgan Freeman to The Shawshank Redemption (Edited)
-    addActorToMovieById(1002, 5004); // Bradley Pitt to The Shawshank Redemption (Edited)
-    addActorToMovieById(1000, 5004); // Leonardo DiCaprio to The Shawshank Redemption (Edited)
+    addActorToMovieById(1000, 5000, true); // Leonardo DiCaprio to Inception (Edited)
+    addActorToMovieById(1001, 5001, true); // Katherine Winslet to Titanic (Edited)
+    addActorToMovieById(1002, 5002, true); // Bradley Pitt to Fight Club (Edited)
+    addActorToMovieById(1000, 5001, true); // Leonardo DiCaprio to Titanic (Edited) as well
+    addActorToMovieById(1004, 5003, true); // Scarlett Johansson to Avengers: Endgame (Edited)
+    addActorToMovieById(1003, 5004, true); // Morgan Freeman to The Shawshank Redemption (Edited)
+    addActorToMovieById(1002, 5004, true); // Bradley Pitt to The Shawshank Redemption (Edited)
+    addActorToMovieById(1000, 5004, true); // Leonardo DiCaprio to The Shawshank Redemption (Edited)
     // Invalid associations using IDs
-    addActorToMovieById(9999, 5000); // Tom Hanks does not exist
-    addActorToMovieById(1000, 9999); // Unknown Movie does not exist
-    addActorToMovieById(1003, 5002); // Morgan Freeman to Fight Club (Edited)
-    addActorToMovieById(1000, 5002); // Leonardo DiCaprio to Fight Club (Edited)
+    addActorToMovieById(9999, 5000, true); // Tom Hanks does not exist
+    addActorToMovieById(1000, 9999, true); // Unknown Movie does not exist
+    addActorToMovieById(1003, 5002, true); // Morgan Freeman to Fight Club (Edited)
+    addActorToMovieById(1000, 5002, true); // Leonardo DiCaprio to Fight Club (Edited)
     displayActorsInMovie("Inception (Edited)");
     displayActorsInMovie("Titanic (Edited)");
     displayActorsInMovie("Fight Club (Edited)");
@@ -781,8 +812,8 @@ void MovieApp::runAllTests() {
     displayRecentMovies();
     // Add a recent movie to ensure functionality
     addNewMovie("New Blockbuster", "A newly released blockbuster movie.", 2024); // ID=5005
-    addActorToMovieById(1000, 5005); // Leonardo Wilhelm DiCaprio to New Blockbuster
-    addActorToMovieById(1001, 5005); // Katherine Winslet to New Blockbuster
+    addActorToMovieById(1000, 5005, true); // Leonardo Wilhelm DiCaprio to New Blockbuster
+    addActorToMovieById(1001, 5005, true); // Katherine Winslet to New Blockbuster
     displayRecentMovies();
     // Add an invalid recent movie
     addNewMovie("Future Movie", "A movie from the future.", 2027); // Invalid year
@@ -850,13 +881,13 @@ void MovieApp::runAllTests() {
     cout << "\n-- Test 17: Recommend Movies by Rating --\n";
     // Assuming a recommendMoviesByRating() function exists
     cout << "Top Rated Movies (Threshold: 8):\n";
-    recommendMoviesByRating(8,10); // Display movies with rating >= 8
+    recommendMoviesByRating(8, 10); // Display movies with rating >= 8
 
     // 18. Test Recommend Actors by Rating
     cout << "\n-- Test 18: Recommend Actors by Rating --\n";
     // Assuming a recommendActorsByRating() function exists
     cout << "Top Rated Actors (Threshold: 8):\n";
-    recommendActorsByRating(8,10); // Display actors with rating >= 8
+    recommendActorsByRating(8, 10); // Display actors with rating >= 8
 
     cout << "\n========== All Tests Completed ==========\n";
 
@@ -1086,5 +1117,4 @@ void MovieApp::recommendActorsByRating(int minRating, int maxRating) const {
     cout << "Actors with ratings between " << minRating << " and " << maxRating << ":\n";
     actorRatings.displayActorsInRange(minRating, maxRating);
 }
-
 

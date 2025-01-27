@@ -84,28 +84,34 @@ std::string promptForString(const std::string& prompt, bool allowCancel = true) 
 //-----------------------------------------------
 // 2) Display menu
 //-----------------------------------------------
-void displayMenu() {
+void displayMenu(bool isAdmin) {
     std::cout << "\n========== Movie Management System ==========\n";
-    std::cout << "1.  Add New Actor\n";
-    std::cout << "2.  Add New Movie\n";
-    std::cout << "3.  Add Actor to Movie\n";
-    std::cout << "4.  Update Actor Details\n";
-    std::cout << "5.  Update Movie Details\n";
-    std::cout << "6.  Display All Actors\n";
-    std::cout << "7.  Display All Movies\n";
-    std::cout << "8.  Display Actors by Age Range\n";
-    std::cout << "9.  Display Movies Released in the Last 3 Years\n";
-    std::cout << "10. Display Movies of an Actor\n";
-    std::cout << "11. Display Actors in a Movie\n";
-    std::cout << "12. Display Actors Known by an Actor\n";
-    std::cout << "13. Exit\n";
-    std::cout << "14. Run All Tests\n";
-    std::cout << "15. Set Actor Rating\n";
-    std::cout << "16. Set Movie Rating\n";
-    std::cout << "17. Recommend Movies by Rating\n";
-    std::cout << "18. Recommend Actors by Rating\n";
+    if (isAdmin) {
+        std::cout << "1.  Add New Actor\n";
+        std::cout << "2.  Add New Movie\n";
+        std::cout << "3.  Add Actor to Movie\n";
+        std::cout << "4.  Update Actor Details\n";
+        std::cout << "5.  Update Movie Details\n";
+        std::cout << "14. Run All Tests\n"; // Admin-only feature
+        std::cout << "13. Exit\n";
+    }
+    else {
+        std::cout << "6.  Display All Actors\n";
+        std::cout << "7.  Display All Movies\n";
+        std::cout << "8.  Display Actors by Age Range\n";
+        std::cout << "9.  Display Movies Released in the Last 3 Years\n";
+        std::cout << "10. Display Movies of an Actor\n";
+        std::cout << "11. Display Actors in a Movie\n";
+        std::cout << "12. Display Actors Known by an Actor\n";
+        std::cout << "15. Set Actor Rating\n";
+        std::cout << "16. Set Movie Rating\n";
+        std::cout << "17. Recommend Movies by Rating\n";
+        std::cout << "18. Recommend Actors by Rating\n";
+        std::cout << "13. Exit\n";
+    }
     std::cout << "Enter your choice: ";
 }
+
 
 //-----------------------------------------------
 // 3) Main
@@ -118,485 +124,275 @@ int main() {
     app.readCast("cast.csv");
     std::cout << "Data loaded successfully.\n";
 
+    // Admin Mode Setup
+    std::cout << "Enter admin mode? (y/n): ";
+    char adminChoice;
+    std::cin >> adminChoice;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    if (tolower(adminChoice) == 'y') {
+        std::cout << "Enter admin password: ";
+        std::string password;
+        std::getline(std::cin, password);
+        if (password == "dsaadmin") {
+            app.setAdminMode(true);
+            std::cout << "[Admin Mode Enabled]\n";
+        }
+        else {
+            std::cout << "[Error] Incorrect password. Switching to user mode.\n";
+            app.setAdminMode(false);
+        }
+    }
+    else {
+        app.setAdminMode(false);
+        std::cout << "[User Mode Enabled]\n";
+    }
+
     int choice;
     do {
-        displayMenu();
+        // Display the appropriate menu based on the mode
+        displayMenu(app.isAdminMode());
         std::cin >> choice;
 
-        // Handle non-integer choice
+        // Handle non-integer input
         if (std::cin.fail()) {
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            std::cout << "[Error] Invalid menu choice!\n\n";
+            std::cout << "[Error] Invalid menu choice!\n";
             continue;
         }
-        // Clear leftover input to safely use getline later
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-        switch (choice) {
-            //--------------------------------
-            // 1) Add New Actor
-            //--------------------------------
-        case 1: {
-            std::string name;
-            int yearOfBirth;
-
-            // Prompt for name
-            name = promptForString("Enter actor name (type 'exit' to cancel): ");
-            if (name.empty()) {
-                std::cout << "[Cancelled] Returning to main menu.\n";
+        if (app.isAdminMode()) {
+            // Admin-specific options
+            switch (choice) {
+            case 1: {
+                std::string name = promptForString("Enter actor name (type 'exit' to cancel): ");
+                if (name.empty()) {
+                    std::cout << "[Cancelled] Returning to main menu.\n";
+                    break;
+                }
+                int yearOfBirth = promptForInt("Enter year of birth (1-2024, or '0' to cancel): ", 1, 2024, true);
+                if (yearOfBirth == 0) {
+                    std::cout << "[Cancelled] Returning to main menu.\n";
+                    break;
+                }
+                app.addNewActor(name, yearOfBirth);
+                std::cout << "[Success] Actor added successfully.\n";
                 break;
             }
-
-            // Prompt for YOB
-            yearOfBirth = promptForInt("Enter year of birth (1-2024, or '0' to cancel): ",
-                1, 2024, true);
-            if (yearOfBirth == 0) {
-                std::cout << "[Cancelled] Returning to main menu.\n";
+            case 2: {
+                std::string title = promptForString("Enter movie title (type 'exit' to cancel): ");
+                if (title.empty()) {
+                    std::cout << "[Cancelled] Returning to main menu.\n";
+                    break;
+                }
+                std::cout << "Enter movie plot (can be blank; type 'exit' alone to cancel): ";
+                std::string plot;
+                std::getline(std::cin, plot);
+                plot = trim(plot);
+                if (plot == "exit") {
+                    std::cout << "[Cancelled] Returning to main menu.\n";
+                    break;
+                }
+                int releaseYear = promptForInt("Enter release year (1900-2024, '0' to cancel): ", 1900, 2024, true);
+                if (releaseYear == 0) {
+                    std::cout << "[Cancelled] Returning to main menu.\n";
+                    break;
+                }
+                app.addNewMovie(title, plot, releaseYear);
+                std::cout << "[Success] Movie added successfully.\n";
                 break;
             }
-
-            // Add
-            app.addNewActor(name, yearOfBirth);
-            std::cout << "[Success] Actor added successfully.\n";
-
-            // OPTIONAL: Prompt for rating
-            int rating = promptForInt("Enter actor rating (1-10, '0' to skip): ",
-                1, 10, true);
-            if (rating != 0) {
-                // If you have a quick way to get that newly created actor's ID, do so:
-                // e.g., assume app.getNextActorId() returns the *next* ID not used,
-                // so the newly added actor is getNextActorId()-1. 
-                int assignedActorId = app.getNextActorId() - 1;
-                app.setActorRating(assignedActorId, rating);
+            case 3: {
+                int actorId = promptForInt("Enter actor ID (1-99999, or '0' to cancel): ", 1, 99999, true);
+                if (actorId == 0) {
+                    std::cout << "[Cancelled] Returning to main menu.\n";
+                    break;
+                }
+                int movieId = promptForInt("Enter movie ID (1-99999, or '0' to cancel): ", 1, 99999, true);
+                if (movieId == 0) {
+                    std::cout << "[Cancelled] Returning to main menu.\n";
+                    break;
+                }
+                app.addActorToMovieById(actorId, movieId, true);
+                break;
             }
-
-            break;
+            case 4: {
+                int actorId = promptForInt("Enter actor ID (1-99999, or '0' to cancel): ", 1, 99999, true);
+                if (actorId == 0) {
+                    std::cout << "[Cancelled] Returning to main menu.\n";
+                    break;
+                }
+                std::string newName = promptForString("Enter new actor name (type 'exit' to cancel): ");
+                if (newName.empty()) {
+                    std::cout << "[Cancelled] Returning to main menu.\n";
+                    break;
+                }
+                int newYOB = promptForInt("Enter new year of birth (1-2024, or '0' to cancel): ", 1, 2024, true);
+                if (newYOB == 0) {
+                    std::cout << "[Cancelled] Returning to main menu.\n";
+                    break;
+                }
+                app.updateActorDetails(actorId, newName, newYOB);
+                break;
+            }
+            case 5: {
+                int movieId = promptForInt("Enter movie ID (1-99999, or '0' to cancel): ", 1, 99999, true);
+                if (movieId == 0) {
+                    std::cout << "[Cancelled] Returning to main menu.\n";
+                    break;
+                }
+                std::string newTitle = promptForString("Enter new movie title (type 'exit' to cancel): ");
+                if (newTitle.empty()) {
+                    std::cout << "[Cancelled] Returning to main menu.\n";
+                    break;
+                }
+                std::cout << "Enter new plot (type 'exit' alone to cancel): ";
+                std::string newPlot;
+                std::getline(std::cin, newPlot);
+                newPlot = trim(newPlot);
+                if (newPlot == "exit") {
+                    std::cout << "[Cancelled] Returning to main menu.\n";
+                    break;
+                }
+                int newYear = promptForInt("Enter new release year (1900-2024, '0' to cancel): ", 1900, 2024, true);
+                if (newYear == 0) {
+                    std::cout << "[Cancelled] Returning to main menu.\n";
+                    break;
+                }
+                app.updateMovieDetails(movieId, newTitle, newPlot, newYear);
+                break;  // Added break here to terminate the case
+            }
+            case 14:
+                std::cout << "[Admin] Running all tests...\n";
+                app.runAllTests();
+                break;
+            case 13:
+                std::cout << "Exiting... Thank you for using the Movie Management System!\n";
+                break;
+            default:
+                std::cout << "[Error] Invalid admin menu choice!\n";
+                break;
+            }
         }
-
-              //--------------------------------
-              // 2) Add New Movie
-              //--------------------------------
-        case 2: {
-            // Prompt for title
-            std::string title = promptForString("Enter movie title (type 'exit' to cancel): ");
-            if (title.empty()) {
-                std::cout << "[Cancelled] Returning to main menu.\n";
+        else {
+            // User-specific options
+            switch (choice) {
+            case 6:
+                app.displayAllActors();
                 break;
-            }
-
-            // Prompt for plot (just one line, can be blank)
-            std::cout << "Enter movie plot (can be blank; type 'exit' alone to cancel): ";
-            std::string plot;
-            std::getline(std::cin, plot);
-            plot = trim(plot);
-            if (plot == "exit") {
-                std::cout << "[Cancelled] Returning to main menu.\n";
+            case 7:
+                app.displayAllMovies();
                 break;
-            }
-
-            // Prompt for release year
-            int releaseYear = promptForInt("Enter release year (1900-2024, '0' to cancel): ",
-                1900, 2024, true);
-            if (releaseYear == 0) {
-                std::cout << "[Cancelled] Returning to main menu.\n";
-                break;
-            }
-
-            app.addNewMovie(title, plot, releaseYear);
-            std::cout << "[Success] Movie added successfully.\n";
-
-            // OPTIONAL: Prompt for rating
-            int rating = promptForInt("Enter movie rating (1-10, '0' to skip): ",
-                1, 10, true);
-            if (rating != 0) {
-                // same logic as for actors
-                int assignedMovieId = app.getNextMovieId() - 1;
-                app.setMovieRating(assignedMovieId, rating);
-            }
-
-            break;
-        }
-
-              //--------------------------------
-              // 3) Add Actor to Movie
-              //--------------------------------
-        case 3: {
-            // Prompt for actor ID
-            std::string actorIdInput = promptForString("Enter actor ID (type 'exit' to cancel): ");
-            if (actorIdInput.empty()) {
-                std::cout << "[Cancelled] Returning to main menu.\n";
-                break;
-            }
-
-            // Convert actor ID input to integer
-            int actorId;
-            try {
-                actorId = std::stoi(actorIdInput);
-            }
-            catch (const std::invalid_argument&) {
-                std::cout << "[Error] Invalid actor ID format. Please enter a numerical ID.\n";
-                break;
-            }
-            catch (const std::out_of_range&) {
-                std::cout << "[Error] Actor ID out of range. Please enter a valid ID.\n";
-                break;
-            }
-
-            // Check if actor ID exists
-            if (!app.isActorIdUsed(actorId)) {
-                std::cout << "[Error] Actor ID " << actorId << " not found.\n";
-                break;
-            }
-
-            // Prompt for movie ID
-            std::string movieIdInput = promptForString("Enter movie ID (type 'exit' to cancel): ");
-            if (movieIdInput.empty()) {
-                std::cout << "[Cancelled] Returning to main menu.\n";
-                break;
-            }
-
-            // Convert movie ID input to integer
-            int movieId;
-            try {
-                movieId = std::stoi(movieIdInput);
-            }
-            catch (const std::invalid_argument&) {
-                std::cout << "[Error] Invalid movie ID format. Please enter a numerical ID.\n";
-                break;
-            }
-            catch (const std::out_of_range&) {
-                std::cout << "[Error] Movie ID out of range. Please enter a valid ID.\n";
-                break;
-            }
-
-            // Check if movie ID exists
-            if (!app.isMovieIdUsed(movieId)) {
-                std::cout << "[Error] Movie ID " << movieId << " not found.\n";
-                break;
-            }
-
-            // Add actor to movie using IDs
-            // Add actor to movie using IDs
-            app.addActorToMovieById(actorId, movieId);
-            break;
-        }
-
-
-
-              //--------------------------------
-              // 4) Update Actor Details
-              //--------------------------------
-        case 4: {
-            // Prompt for actor ID
-            int actorId = promptForInt("Enter actor ID (1-99999, or '0' to cancel): ",
-                1, 99999, true);
-            if (actorId == 0) {
-                std::cout << "[Cancelled] Returning to main menu.\n";
-                break;
-            }
-
-            // Prompt for new name
-            std::string newName = promptForString(
-                "Enter new actor name (type 'exit' to cancel): "
-            );
-            if (newName.empty()) {
-                std::cout << "[Cancelled] Returning to main menu.\n";
-                break;
-            }
-
-            // Prompt for new YOB
-            int newYOB = promptForInt(
-                "Enter new year of birth (1-2024, or '0' to cancel): ",
-                1, 2024, true
-            );
-            if (newYOB == 0) {
-                std::cout << "[Cancelled] Returning to main menu.\n";
-                break;
-            }
-
-            app.updateActorDetails(actorId, newName, newYOB);
-
-            // OPTIONAL: Also prompt if they want to update the rating:
-            int newRating = promptForInt(
-                "Enter new rating for actor (1-10, '0' to skip): ",
-                1, 10, true
-            );
-            if (newRating != 0) {
-                app.setActorRating(actorId, newRating);
-            }
-
-            break;
-        }
-
-              //--------------------------------
-              // 5) Update Movie Details
-              //--------------------------------
-        case 5: {
-            // Prompt for movie ID
-            int movieId = promptForInt("Enter movie ID (1-99999, or '0' to cancel): ",
-                1, 99999, true);
-            if (movieId == 0) {
-                std::cout << "[Cancelled] Returning to main menu.\n";
-                break;
-            }
-
-            // Prompt for new title
-            std::string newTitle = promptForString(
-                "Enter new movie title (type 'exit' to cancel): "
-            );
-            if (newTitle.empty()) {
-                std::cout << "[Cancelled] Returning to main menu.\n";
-                break;
-            }
-
-            // Prompt for new plot
-            std::cout << "Enter new plot (type 'exit' alone to cancel): ";
-            std::string newPlot;
-            std::getline(std::cin, newPlot);
-            newPlot = trim(newPlot);
-            if (newPlot == "exit") {
-                std::cout << "[Cancelled] Returning to main menu.\n";
-                break;
-            }
-
-            // Prompt for new release year
-            int newYear = promptForInt(
-                "Enter new release year (1900-2024, '0' to cancel): ",
-                1900, 2024, true
-            );
-            if (newYear == 0) {
-                std::cout << "[Cancelled] Returning to main menu.\n";
-                break;
-            }
-
-            app.updateMovieDetails(movieId, newTitle, newPlot, newYear);
-
-            // OPTIONAL: Also prompt for rating
-            int newRating = promptForInt(
-                "Enter new rating for movie (1-10, '0' to skip): ",
-                1, 10, true
-            );
-            if (newRating != 0) {
-                app.setMovieRating(movieId, newRating);
-            }
-
-            break;
-        }
-
-              //--------------------------------
-              // 6) Display All Actors
-              //--------------------------------
-        case 6:
-            app.displayAllActors();
-            break;
-
-            //--------------------------------
-            // 7) Display All Movies
-            //--------------------------------
-        case 7:
-            app.displayAllMovies();
-            break;
-
-            //--------------------------------
-            // 8) Display Actors by Age Range
-            //--------------------------------
-        case 8: {
-            int minAge = promptForInt("Enter minimum age (1-120, '0' to cancel): ",
-                1, 120, true);
-            if (minAge == 0) {
-                std::cout << "[Cancelled] Returning to main menu.\n";
-                break;
-            }
-            // Make sure maxAge >= minAge
-            int maxAge = 0;
-            while (true) {
-                maxAge = promptForInt("Enter maximum age (>= minAge, '0' to cancel): ",
-                    minAge, 120, true);
+            case 8: {
+                int minAge = promptForInt("Enter minimum age (1-120, '0' to cancel): ", 1, 120, true);
+                if (minAge == 0) {
+                    std::cout << "[Cancelled] Returning to main menu.\n";
+                    break;
+                }
+                int maxAge = promptForInt("Enter maximum age (>= minAge, '0' to cancel): ", minAge, 120, true);
                 if (maxAge == 0) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
-                    goto endSwitch;
+                    break;
                 }
-                if (maxAge < minAge) {
-                    std::cout << "[Error] Max age cannot be < min age.\n";
-                    continue;
+                app.displayActorsByAge(minAge, maxAge);
+                break;
+            }
+            case 9:
+                app.displayRecentMovies();
+                break;
+            case 10: {
+                std::string actorName = promptForString("Enter actor name (type 'exit' to cancel): ");
+                if (actorName.empty()) {
+                    std::cout << "[Cancelled] Returning to main menu.\n";
+                    break;
                 }
+                app.displayMoviesOfActor(actorName);
                 break;
             }
-
-            app.displayActorsByAge(minAge, maxAge);
-            break;
+            case 11: {
+                std::string movieTitle = promptForString("Enter movie title (type 'exit' to cancel): ");
+                if (movieTitle.empty()) {
+                    std::cout << "[Cancelled] Returning to main menu.\n";
+                    break;
+                }
+                app.displayActorsInMovie(movieTitle);
+                break;
+            }
+            case 12: {
+                std::string actorName = promptForString("Enter actor name (type 'exit' to cancel): ");
+                if (actorName.empty()) {
+                    std::cout << "[Cancelled] Returning to main menu.\n";
+                    break;
+                }
+                app.displayActorsKnownBy(actorName);
+                break;
+            }
+            case 15: {
+                int actorId = promptForInt("Enter actor ID (1-99999, '0' to cancel): ", 1, 99999, true);
+                if (actorId == 0) {
+                    std::cout << "[Cancelled]\n";
+                    break;
+                }
+                int newRating = promptForInt("Enter new actor rating (1-10, '0' to cancel): ", 1, 10, true);
+                if (newRating == 0) {
+                    std::cout << "[Cancelled]\n";
+                    break;
+                }
+                app.setActorRating(actorId, newRating);
+                break;
+            }
+            case 16: {
+                int movieId = promptForInt("Enter movie ID (1-99999, '0' to cancel): ", 1, 99999, true);
+                if (movieId == 0) {
+                    std::cout << "[Cancelled]\n";
+                    break;
+                }
+                int newRating = promptForInt("Enter new movie rating (1-10, '0' to cancel): ", 1, 10, true);
+                if (newRating == 0) {
+                    std::cout << "[Cancelled]\n";
+                    break;
+                }
+                app.setMovieRating(movieId, newRating);
+                break;
+            }
+            case 17: {
+                int minRating = promptForInt("Enter minimum movie rating for recommendations (1-10, '0' to cancel): ", 1, 10, true);
+                if (minRating == 0) {
+                    std::cout << "[Cancelled]\n";
+                    break;
+                }
+                int maxRating = promptForInt("Enter maximum movie rating for recommendations (>= minRating, '0' to cancel): ", minRating, 10, true);
+                if (maxRating == 0) {
+                    std::cout << "[Cancelled]\n";
+                    break;
+                }
+                app.recommendMoviesByRating(minRating, maxRating);
+                break;
+            }
+            case 18: {
+                int minRating = promptForInt("Enter minimum actor rating for recommendations (1-10, '0' to cancel): ", 1, 10, true);
+                if (minRating == 0) {
+                    std::cout << "[Cancelled]\n";
+                    break;
+                }
+                int maxRating = promptForInt("Enter maximum actor rating for recommendations (>= minRating, '0' to cancel): ", minRating, 10, true);
+                if (maxRating == 0) {
+                    std::cout << "[Cancelled]\n";
+                    break;
+                }
+                app.recommendActorsByRating(minRating, maxRating);
+                break;
+            }
+            case 13:
+                std::cout << "Exiting... Thank you for using the Movie Management System!\n";
+                break;
+            default:
+                std::cout << "[Error] Invalid user menu choice!\n";
+                break;
+            }
         }
-
-              //--------------------------------
-              // 9) Display Movies Released in the Last 3 Years
-              //--------------------------------
-        case 9:
-            app.displayRecentMovies();
-            break;
-
-            //--------------------------------
-            // 10) Display Movies of an Actor
-            //--------------------------------
-        case 10: {
-            std::string actorName = promptForString(
-                "Enter actor name (type 'exit' to cancel): ");
-            if (actorName.empty()) {
-                std::cout << "[Cancelled] Returning to main menu.\n";
-                break;
-            }
-            app.displayMoviesOfActor(actorName);
-            break;
-        }
-
-               //--------------------------------
-               // 11) Display Actors in a Movie
-               //--------------------------------
-        case 11: {
-            std::string movieTitle = promptForString(
-                "Enter movie title (type 'exit' to cancel): ");
-            if (movieTitle.empty()) {
-                std::cout << "[Cancelled] Returning to main menu.\n";
-                break;
-            }
-            app.displayActorsInMovie(movieTitle);
-            break;
-        }
-
-               //--------------------------------
-               // 12) Display Actors Known by an Actor
-               //--------------------------------
-        case 12: {
-            std::string actorName = promptForString(
-                "Enter actor name (type 'exit' to cancel): ");
-            if (actorName.empty()) {
-                std::cout << "[Cancelled] Returning to main menu.\n";
-                break;
-            }
-            app.displayActorsKnownBy(actorName);
-            break;
-        }
-
-               //--------------------------------
-               // 13) Exit
-               //--------------------------------
-        case 13:
-            std::cout << "Exiting... Thank you for using the Movie Management System!\n";
-            break;
-
-            //--------------------------------
-            // 14) Run All Tests
-            //--------------------------------
-        case 14:
-            app.runAllTests();
-            break;
-
-            //--------------------------------
-            // 15) Set Actor Rating
-            //--------------------------------
-        case 15: {
-            // Prompt for actor ID
-            int actorId = promptForInt(
-                "Enter actor ID (1-99999, '0' to cancel): ",
-                1, 99999, true
-            );
-            if (actorId == 0) {
-                std::cout << "[Cancelled]\n";
-                break;
-            }
-            // Prompt for rating
-            int newRating = promptForInt(
-                "Enter new actor rating (1-10, '0' to cancel): ",
-                1, 10, true
-            );
-            if (newRating == 0) {
-                std::cout << "[Cancelled]\n";
-                break;
-            }
-            app.setActorRating(actorId, newRating);
-            break;
-        }
-
-               //--------------------------------
-               // 16) Set Movie Rating
-               //--------------------------------
-        case 16: {
-            // Prompt for movie ID
-            int movieId = promptForInt(
-                "Enter movie ID (1-99999, '0' to cancel): ",
-                1, 99999, true
-            );
-            if (movieId == 0) {
-                std::cout << "[Cancelled]\n";
-                break;
-            }
-            // Prompt for rating 
-            int newRating = promptForInt(
-                "Enter new movie rating (1-10, '0' to cancel): ",
-                1, 10, true
-            );
-            if (newRating == 0) {
-                std::cout << "[Cancelled]\n";
-                break;
-            }
-            app.setMovieRating(movieId, newRating);
-            break;
-        }
-        
-        case 17: {
-            // Recommend movies by rating range
-            int minRating = promptForInt(
-                "Enter minimum movie rating for recommendations (1-10, '0' to cancel): ",
-                1, 10, true
-            );
-            if (minRating == 0) {
-                std::cout << "[Cancelled]\n";
-                break;
-            }
-
-            int maxRating = promptForInt(
-                "Enter maximum movie rating for recommendations (>= minRating, '0' to cancel): ",
-                minRating, 10, true
-            );
-            if (maxRating == 0) {
-                std::cout << "[Cancelled]\n";
-                break;
-            }
-
-            app.recommendMoviesByRating(minRating, maxRating);
-            break;
-        }
-
-        case 18: {
-            // Recommend actors by rating range
-            int minRating = promptForInt(
-                "Enter minimum actor rating for recommendations (1-10, '0' to cancel): ",
-                1, 10, true
-            );
-            if (minRating == 0) {
-                std::cout << "[Cancelled]\n";
-                break;
-            }
-
-            int maxRating = promptForInt(
-                "Enter maximum actor rating for recommendations (>= minRating, '0' to cancel): ",
-                minRating, 10, true
-            );
-            if (maxRating == 0) {
-                std::cout << "[Cancelled]\n";
-                break;
-            }
-
-            app.recommendActorsByRating(minRating, maxRating);
-            break;
-        }
-
-        default:
-            std::cout << "[Error] Invalid menu choice!\n";
-}
-
-
-    endSwitch:;
         std::cout << std::endl;
     } while (choice != 13);
 
