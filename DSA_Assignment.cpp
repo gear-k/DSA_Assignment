@@ -312,12 +312,10 @@ int main() {
 
                 // 2) Collect all actors that match exactly the entered name
                 List<Actor> matchedActors;
-                int matchCount = 0;
-
-                // Use the `findActorsByName` method from MovieApp to collect matches
                 app.findActorsByName(inputName, matchedActors);
 
                 // Count the number of matches
+                int matchCount = 0;
                 matchedActors.display([&](const Actor& a) {
                     matchCount++;
                     return false; // Keep iterating
@@ -332,7 +330,7 @@ int main() {
                     int actorId = 0;
                     matchedActors.display([&](const Actor& a) {
                         actorId = a.getId();
-                        return true; // Stop after finding the first (and only) match
+                        return true; // Stop after first
                         });
                     app.displayMoviesOfActor(actorId);
                 }
@@ -387,160 +385,32 @@ int main() {
                     // Call the function with the chosen actor's ID
                     app.displayMoviesOfActor(chosenId);
                 }
+                break;
             }
 
-
             case 11: {
-                // 1) Prompt for the (partial) movie title
+                // 1) Prompt for the movie title
                 std::string inputTitle = promptForString("Enter movie title (type 'exit' to cancel): ");
                 if (inputTitle.empty()) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
                 }
 
-                // 2) Collect all movies that match exactly the entered title
-                List<Movie> matchedMovies;
-                int matchCount = 0;
-
-                app.getMovieList().display([&](const Movie& m) {
-                    if (strcmp(m.getTitle(), inputTitle.c_str()) == 0) {
-                        matchedMovies.add(m);
-                        matchCount++;
-                    }
-                    return false; // Keep iterating
-                    });
-
-
-                if (matchCount == 0) {
-                    std::cout << "[Error] No movie found with the title \"" << inputTitle << "\".\n";
-                    break;
-                }
-                else if (matchCount == 1) {
-                    // Exactly one movie matches
-                    app.displayActorsInMovie(inputTitle);
-                }
-                else {
-                    // More than one movie with the same title
-                    std::cout << "[Info] Multiple movies found with the title \"" << inputTitle << "\":\n";
-
-                    static const int MAX_MOVIES = 50;
-                    Movie movieArray[MAX_MOVIES];
-                    int idx = 0;
-                    matchedMovies.display([&](const Movie& m) {
-                        if (idx < MAX_MOVIES) {
-                            movieArray[idx++] = m;
-                        }
-                        return false;
-                        });
-
-                    for (int i = 0; i < idx; i++) {
-                        std::cout << "  ID=" << movieArray[i].getId()
-                            << ", Title=" << movieArray[i].getTitle()
-                            << ", Year=" << movieArray[i].getReleaseYear()
-                            << ", Rating=" << movieArray[i].getRating()
-                            << "\n  Plot=" << movieArray[i].getPlot() << "\n\n";
-                    }
-
-                    // Prompt user for the actual Movie ID
-                    int chosenId = promptForInt("Enter the correct Movie ID (or '0' to cancel): ", 1, 999999, true);
-                    if (chosenId == 0) {
-                        std::cout << "[Cancelled] Returning to main menu.\n";
-                        break;
-                    }
-
-                    bool found = false;
-                    std::string finalMovieTitle;
-                    for (int i = 0; i < idx; i++) {
-                        if (movieArray[i].getId() == chosenId) {
-                            finalMovieTitle = movieArray[i].getTitle();
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        std::cout << "[Error] Invalid movie ID. Returning to main menu.\n";
-                        break;
-                    }
-
-                    app.displayActorsInMovie(finalMovieTitle);
-                }
+                // 2) Use the MovieApp method to display actors in the movie
+                app.displayActorsInMovie(inputTitle);
                 break;
             }
 
             case 12: {
-                // 1) Prompt for the (partial) actor name
+                // 1) Prompt for the actor name
                 std::string inputName = promptForString("Enter actor name (type 'exit' to cancel): ");
                 if (inputName.empty()) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
                 }
 
-                // 2) Collect all actors that match exactly the entered name
-                List<Actor> matchedActors;
-                int matchCount = 0;
-
-                app.getActorList().display([&](const Actor& a) {
-                    if (strcmp(a.getName(), inputName.c_str()) == 0) {
-                        matchedActors.add(a);
-                        matchCount++;
-                    }
-                    return false; // Keep iterating
-                    });
-
-
-                if (matchCount == 0) {
-                    std::cout << "[Error] No actor found with name \"" << inputName << "\".\n";
-                    break;
-                }
-                else if (matchCount == 1) {
-                    // Exactly one match
-                    app.displayActorsKnownBy(inputName);
-                }
-                else {
-                    // More than one actor with the same name
-                    std::cout << "[Info] Multiple actors found with the name \"" << inputName << "\":\n";
-
-                    static const int MAX_ACTORS = 50;
-                    Actor actorArray[MAX_ACTORS];
-                    int idx = 0;
-                    matchedActors.display([&](const Actor& a) {
-                        if (idx < MAX_ACTORS) {
-                            actorArray[idx++] = a;
-                        }
-                        return false;
-                        });
-
-                    for (int i = 0; i < idx; i++) {
-                        std::cout << "  ID=" << actorArray[i].getId()
-                            << ", Name=" << actorArray[i].getName()
-                            << ", BirthYear=" << actorArray[i].getBirthYear()
-                            << ", Rating=" << actorArray[i].getRating()
-                            << "\n";
-                    }
-
-                    int chosenId = promptForInt("Enter the correct Actor ID (or '0' to cancel): ", 1, 999999, true);
-                    if (chosenId == 0) {
-                        std::cout << "[Cancelled] Returning to main menu.\n";
-                        break;
-                    }
-
-                    bool found = false;
-                    std::string finalActorName;
-                    for (int i = 0; i < idx; i++) {
-                        if (actorArray[i].getId() == chosenId) {
-                            finalActorName = actorArray[i].getName();
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        std::cout << "[Error] Invalid actor ID. Returning to main menu.\n";
-                        break;
-                    }
-
-                    // Use the chosen actor name to call the function
-                    app.displayActorsKnownBy(finalActorName);
-                }
+                // 2) Use the MovieApp method to display actors known by the actor
+                app.displayActorsKnownBy(inputName);
                 break;
             }
 

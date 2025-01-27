@@ -124,6 +124,11 @@ public:
     int getSize() const {
         return size;
     }
+
+    // Get the number of elements in the list
+    int getCount() const {
+        return size;
+    }
 };
 
 #endif // LIST_H

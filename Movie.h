@@ -46,7 +46,7 @@ public:
     bool hasActor(const char* actorName) const;
 
 
-    // New method for hasActor with actorId being the property to check
+    // New method for hasActor with actorId being the prop
     bool hasActor(int actorId) const;
 
 
