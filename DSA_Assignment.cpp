@@ -303,32 +303,243 @@ int main() {
                 app.displayRecentMovies();
                 break;
             case 10: {
-                std::string actorName = promptForString("Enter actor name (type 'exit' to cancel): ");
-                if (actorName.empty()) {
+                // 1) Prompt for the (partial) actor name
+                std::string inputName = promptForString("Enter actor name (type 'exit' to cancel): ");
+                if (inputName.empty()) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
                 }
-                app.displayMoviesOfActor(actorName);
+
+                // 2) Collect all actors that match exactly the entered name
+                List<Actor> matchedActors;
+                int matchCount = 0;
+
+                // Use the `findActorsByName` method from MovieApp to collect matches
+                app.findActorsByName(inputName, matchedActors);
+
+                // Count the number of matches
+                matchedActors.display([&](const Actor& a) {
+                    matchCount++;
+                    return false; // Keep iterating
+                    });
+
+                if (matchCount == 0) {
+                    std::cout << "[Error] No actor found with name \"" << inputName << "\".\n";
+                    break;
+                }
+                else if (matchCount == 1) {
+                    // Exactly one actor matches the name; proceed with the original function
+                    app.displayMoviesOfActor(inputName);
+                }
+                else {
+                    // More than one actor matches the name
+                    std::cout << "[Info] Multiple actors found with the name \"" << inputName << "\":\n";
+
+                    static const int MAX_ACTORS = 50;
+                    Actor actorArray[MAX_ACTORS];
+                    int idx = 0;
+
+                    // Store matched actors into an array for later reference
+                    matchedActors.display([&](const Actor& a) {
+                        if (idx < MAX_ACTORS) {
+                            actorArray[idx++] = a;
+                        }
+                        return false;
+                        });
+
+                    // Display all matches with IDs and details
+                    for (int i = 0; i < idx; i++) {
+                        std::cout << "  ID=" << actorArray[i].getId()
+                            << ", Name=" << actorArray[i].getName()
+                            << ", BirthYear=" << actorArray[i].getBirthYear()
+                            << ", Rating=" << actorArray[i].getRating()
+                            << "\n";
+                    }
+
+                    // Prompt the user to select the correct Actor ID
+                    int chosenId = promptForInt("Enter the correct Actor ID (or '0' to cancel): ", 1, 999999, true);
+                    if (chosenId == 0) {
+                        std::cout << "[Cancelled] Returning to main menu.\n";
+                        break;
+                    }
+
+                    // Verify the chosen ID and get the associated actor's name
+                    bool found = false;
+                    std::string finalActorName;
+                    for (int i = 0; i < idx; i++) {
+                        if (actorArray[i].getId() == chosenId) {
+                            finalActorName = actorArray[i].getName();
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found) {
+                        std::cout << "[Error] Invalid Actor ID selected. Returning to main menu.\n";
+                        break;
+                    }
+
+                    // Call the original function with the chosen actor's name
+                    app.displayMoviesOfActor(finalActorName);
+                }
                 break;
             }
+
+
             case 11: {
-                std::string movieTitle = promptForString("Enter movie title (type 'exit' to cancel): ");
-                if (movieTitle.empty()) {
+                // 1) Prompt for the (partial) movie title
+                std::string inputTitle = promptForString("Enter movie title (type 'exit' to cancel): ");
+                if (inputTitle.empty()) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
                 }
-                app.displayActorsInMovie(movieTitle);
+
+                // 2) Collect all movies that match exactly the entered title
+                List<Movie> matchedMovies;
+                int matchCount = 0;
+
+                app.getMovieList().display([&](const Movie& m) {
+                    if (strcmp(m.getTitle(), inputTitle.c_str()) == 0) {
+                        matchedMovies.add(m);
+                        matchCount++;
+                    }
+                    return false; // Keep iterating
+                    });
+
+
+                if (matchCount == 0) {
+                    std::cout << "[Error] No movie found with the title \"" << inputTitle << "\".\n";
+                    break;
+                }
+                else if (matchCount == 1) {
+                    // Exactly one movie matches
+                    app.displayActorsInMovie(inputTitle);
+                }
+                else {
+                    // More than one movie with the same title
+                    std::cout << "[Info] Multiple movies found with the title \"" << inputTitle << "\":\n";
+
+                    static const int MAX_MOVIES = 50;
+                    Movie movieArray[MAX_MOVIES];
+                    int idx = 0;
+                    matchedMovies.display([&](const Movie& m) {
+                        if (idx < MAX_MOVIES) {
+                            movieArray[idx++] = m;
+                        }
+                        return false;
+                        });
+
+                    for (int i = 0; i < idx; i++) {
+                        std::cout << "  ID=" << movieArray[i].getId()
+                            << ", Title=" << movieArray[i].getTitle()
+                            << ", Year=" << movieArray[i].getReleaseYear()
+                            << ", Rating=" << movieArray[i].getRating()
+                            << "\n  Plot=" << movieArray[i].getPlot() << "\n\n";
+                    }
+
+                    // Prompt user for the actual Movie ID
+                    int chosenId = promptForInt("Enter the correct Movie ID (or '0' to cancel): ", 1, 999999, true);
+                    if (chosenId == 0) {
+                        std::cout << "[Cancelled] Returning to main menu.\n";
+                        break;
+                    }
+
+                    bool found = false;
+                    std::string finalMovieTitle;
+                    for (int i = 0; i < idx; i++) {
+                        if (movieArray[i].getId() == chosenId) {
+                            finalMovieTitle = movieArray[i].getTitle();
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        std::cout << "[Error] Invalid movie ID. Returning to main menu.\n";
+                        break;
+                    }
+
+                    app.displayActorsInMovie(finalMovieTitle);
+                }
                 break;
             }
+
             case 12: {
-                std::string actorName = promptForString("Enter actor name (type 'exit' to cancel): ");
-                if (actorName.empty()) {
+                // 1) Prompt for the (partial) actor name
+                std::string inputName = promptForString("Enter actor name (type 'exit' to cancel): ");
+                if (inputName.empty()) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
                 }
-                app.displayActorsKnownBy(actorName);
+
+                // 2) Collect all actors that match exactly the entered name
+                List<Actor> matchedActors;
+                int matchCount = 0;
+
+                app.getActorList().display([&](const Actor& a) {
+                    if (strcmp(a.getName(), inputName.c_str()) == 0) {
+                        matchedActors.add(a);
+                        matchCount++;
+                    }
+                    return false; // Keep iterating
+                    });
+
+
+                if (matchCount == 0) {
+                    std::cout << "[Error] No actor found with name \"" << inputName << "\".\n";
+                    break;
+                }
+                else if (matchCount == 1) {
+                    // Exactly one match
+                    app.displayActorsKnownBy(inputName);
+                }
+                else {
+                    // More than one actor with the same name
+                    std::cout << "[Info] Multiple actors found with the name \"" << inputName << "\":\n";
+
+                    static const int MAX_ACTORS = 50;
+                    Actor actorArray[MAX_ACTORS];
+                    int idx = 0;
+                    matchedActors.display([&](const Actor& a) {
+                        if (idx < MAX_ACTORS) {
+                            actorArray[idx++] = a;
+                        }
+                        return false;
+                        });
+
+                    for (int i = 0; i < idx; i++) {
+                        std::cout << "  ID=" << actorArray[i].getId()
+                            << ", Name=" << actorArray[i].getName()
+                            << ", BirthYear=" << actorArray[i].getBirthYear()
+                            << ", Rating=" << actorArray[i].getRating()
+                            << "\n";
+                    }
+
+                    int chosenId = promptForInt("Enter the correct Actor ID (or '0' to cancel): ", 1, 999999, true);
+                    if (chosenId == 0) {
+                        std::cout << "[Cancelled] Returning to main menu.\n";
+                        break;
+                    }
+
+                    bool found = false;
+                    std::string finalActorName;
+                    for (int i = 0; i < idx; i++) {
+                        if (actorArray[i].getId() == chosenId) {
+                            finalActorName = actorArray[i].getName();
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        std::cout << "[Error] Invalid actor ID. Returning to main menu.\n";
+                        break;
+                    }
+
+                    // Use the chosen actor name to call the function
+                    app.displayActorsKnownBy(finalActorName);
+                }
                 break;
             }
+
             case 15: {
                 int actorId = promptForInt("Enter actor ID (1-99999, '0' to cancel): ", 1, 99999, true);
                 if (actorId == 0) {

@@ -31,6 +31,10 @@ private:
 
 public:
     MovieApp();
+    const List<Movie>& getMovieList() const;
+    const List<Actor>& getActorList() const;
+
+    void findActorsByName(const std::string& name, List<Actor>& result) const;
 
     // NEW: Methods to manage admin mode
     void setAdminMode(bool admin); // Set admin mode

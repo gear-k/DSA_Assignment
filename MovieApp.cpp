@@ -8,6 +8,24 @@
 
 using namespace std;
 
+void MovieApp::findActorsByName(const std::string& name, List<Actor>& result) const {
+    actorList.display([&](const Actor& a) {
+        if (strcmp(a.getName(), name.c_str()) == 0) {
+            result.add(a);
+        }
+        return false; // Keep going
+        });
+}
+
+const List<Movie>& MovieApp::getMovieList() const {
+    return movieList;
+}
+
+const List<Actor>& MovieApp::getActorList() const {
+    return actorList;
+}
+
+
 // Helper to trim quotes/spaces
 static std::string trimQuotes(const std::string& str) {
     size_t start = str.find_first_not_of(" \"");
