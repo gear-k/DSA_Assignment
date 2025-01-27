@@ -68,7 +68,7 @@ public:
     void displayAllMovies() const;
     void displayActorsByAge(int minAge, int maxAge) const;
     void displayRecentMovies() const;
-    void displayMoviesOfActor(const std::string& actorName) const;
+    void displayMoviesOfActor(int actorId) const;
     void displayActorsInMovie(const std::string& movieTitle) const;
 
     // The BFS version (2-level acquaintances):

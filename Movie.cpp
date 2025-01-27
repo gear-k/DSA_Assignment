@@ -123,6 +123,18 @@ bool Movie::hasActor(const char* actorName) const {
     return found;
 }
 
+bool Movie::hasActor(int actorId) const {
+    bool found = false;
+    actors.display([&](const Actor& a) {
+        if (a.getId() == actorId) {
+            found = true;
+            return true; // break out of the loop
+        }
+        return false;
+        });
+    return found;
+}
+
 
 
 List<Actor>& Movie::getActors() {

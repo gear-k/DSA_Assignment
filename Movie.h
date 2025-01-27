@@ -45,6 +45,11 @@ public:
     void addActor(const Actor& actor);
     bool hasActor(const char* actorName) const;
 
+
+    // New method for hasActor with actorId being the property to check
+    bool hasActor(int actorId) const;
+
+
     int getRating() const { return rating; }
     void setRating(int r) { rating = r; }
 

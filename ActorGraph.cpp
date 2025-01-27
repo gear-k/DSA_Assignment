@@ -1,7 +1,13 @@
 #include "ActorGraph.h"
 #include <cstring>
 
-ActorGraph::BFSQueue::BFSQueue() : front(0), rear(-1), count(0) {}
+ActorGraph::BFSQueue::BFSQueue() : front(0), rear(-1), count(0) {
+    // Initialize all Pair elements in data to zero
+    for (int i = 0; i < 2000; ++i) {
+        data[i].idx = 0;
+        data[i].depth = 0;
+    }
+}
 
 bool ActorGraph::BFSQueue::isEmpty() const {
     return count == 0;
@@ -38,7 +44,7 @@ void ActorGraph::buildActorGraph(
 ) {
     actorCount = 0;
 
-    // 1) Collect all actor IDs
+    // Step 1: Collect all actor IDs in actorIds array
     actorList.display([&](const Actor& actor) {
         if (actorCount < MAX_ACTORS) {
             actorIds[actorCount] = actor.getId();
@@ -47,9 +53,10 @@ void ActorGraph::buildActorGraph(
         return false;
         });
 
-    // 2) Build adjacency lists
+    // Step 2: Dynamically allocate temporary array for each movie
     movieList.display([&](const Movie& mov) {
-        int tmpIdx[300];
+        // Allocate tmpIdx on the heap
+        int* tmpIdx = new int[300];
         int tmpCount = 0;
 
         mov.getActors().display([&](const Actor& a) {
@@ -60,16 +67,20 @@ void ActorGraph::buildActorGraph(
             return false;
             });
 
-        // Link actors pairwise
         for (int i = 0; i < tmpCount; i++) {
             for (int j = i + 1; j < tmpCount; j++) {
                 adjacencyLists[tmpIdx[i]].add(tmpIdx[j]);
                 adjacencyLists[tmpIdx[j]].add(tmpIdx[i]);
             }
         }
+
+        // Clean up heap memory
+        delete[] tmpIdx;
+
         return false;
         });
 }
+
 
 int ActorGraph::findActorIndexInArray(int actorId, const int actorIds[], int count) {
     for (int i = 0; i < count; i++) {
@@ -86,7 +97,13 @@ List<int> ActorGraph::findConnectedActors(
     int maxDepth
 ) {
     List<int> discoveredIndices;
-    bool visited[MAX_ACTORS] = { false };
+
+    // Dynamically allocate visited array on the heap
+    bool* visited = new bool[MAX_ACTORS];
+    // Initialize all elements to false
+    for (int i = 0; i < MAX_ACTORS; ++i) {
+        visited[i] = false;
+    }
 
     BFSQueue q;
     q.enqueue(startIndex, 0);
@@ -109,6 +126,9 @@ List<int> ActorGraph::findConnectedActors(
                 });
         }
     }
+
+    // Clean up heap memory
+    delete[] visited;
 
     return discoveredIndices;
 }

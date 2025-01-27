@@ -328,8 +328,13 @@ int main() {
                     break;
                 }
                 else if (matchCount == 1) {
-                    // Exactly one actor matches the name; proceed with the original function
-                    app.displayMoviesOfActor(inputName);
+                    // Exactly one actor matches the name; retrieve the actor's ID
+                    int actorId = 0;
+                    matchedActors.display([&](const Actor& a) {
+                        actorId = a.getId();
+                        return true; // Stop after finding the first (and only) match
+                        });
+                    app.displayMoviesOfActor(actorId);
                 }
                 else {
                     // More than one actor matches the name
@@ -379,10 +384,9 @@ int main() {
                         break;
                     }
 
-                    // Call the original function with the chosen actor's name
-                    app.displayMoviesOfActor(finalActorName);
+                    // Call the function with the chosen actor's ID
+                    app.displayMoviesOfActor(chosenId);
                 }
-                break;
             }
 
 

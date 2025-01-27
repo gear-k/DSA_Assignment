@@ -5,8 +5,11 @@
 #include <cstdlib>   // for atoi
 #include <cstring>   // for strcmp
 #include "ActorGraph.h"
+#include <cassert>
 
 using namespace std;
+
+
 
 void MovieApp::findActorsByName(const std::string& name, List<Actor>& result) const {
     actorList.display([&](const Actor& a) {
@@ -51,8 +54,15 @@ static std::string trim(const std::string& str) {
 }
 
 
+// Constructor Implementation
 MovieApp::MovieApp()
-    : nextActorId(1000), nextMovieId(5000), movieRatings(), actorRatings() {
+    : nextActorId(1000),
+      nextMovieId(5000),
+      movieRatings(),
+      actorRatings(),
+      isAdmin(false) // Initialize isAdmin to false
+{
+	// Empty
 }
 
 //------------------------------------------------------------------------------
@@ -433,75 +443,146 @@ void MovieApp::updateMovieDetails(int movieId, const std::string& newTitle, cons
 // 5) Display
 //------------------------------------------------------------------------------
 
+
 // Merge sort for Movie array
 void mergeSortMovies(Movie* arr, int left, int right) {
+    // Precondition checks
+    assert(arr != nullptr);
+    assert(left >= 0 && right >= left);
+
     if (left < right) {
         int mid = left + (right - left) / 2;
 
-        // Sort first and second halves
+        // Recursively sort first and second halves
         mergeSortMovies(arr, left, mid);
         mergeSortMovies(arr, mid + 1, right);
 
         // Merge the sorted halves
-        Movie* temp = new Movie[right - left + 1];
-        int i = left, j = mid + 1, k = 0;
+        int size = right - left + 1;
+        Movie* temp = new Movie[size];
+        int leftIndex = left;      // Left sub-array index
+        int rightIndex = mid + 1;  // Right sub-array index
+        int tempIndex = 0;         // Temp array index
 
-        while (i <= mid && j <= right) {
-            if (strcmp(arr[i].getTitle(), arr[j].getTitle()) <= 0) {
-                temp[k++] = arr[i++];
+        // Merge elements into temp array
+        while (leftIndex <= mid && rightIndex <= right) {
+            if (strcmp(arr[leftIndex].getTitle(), arr[rightIndex].getTitle()) <= 0) {
+                temp[tempIndex++] = arr[leftIndex++];
             }
             else {
-                temp[k++] = arr[j++];
+                temp[tempIndex++] = arr[rightIndex++];
+            }
+
+            // Corrected condition to prevent exceeding temp array bounds
+            if (tempIndex >= size) {
+                std::cerr << "[Error] tempIndex exceeded temp array size in mergeSortMovies.\n";
+                break;
             }
         }
 
-        // Copy remaining elements
-        while (i <= mid) temp[k++] = arr[i++];
-        while (j <= right) temp[k++] = arr[j++];
+        // Copy remaining elements from left sub-array
+        while (leftIndex <= mid) {
+            if (tempIndex < size) {
+                temp[tempIndex++] = arr[leftIndex++];
+            }
+            else {
+                std::cerr << "[Error] tempIndex exceeded temp array size while copying left sub-array.\n";
+                break;
+            }
+        }
+
+        // Copy remaining elements from right sub-array
+        while (rightIndex <= right) {
+            if (tempIndex < size) {
+                temp[tempIndex++] = arr[rightIndex++];
+            }
+            else {
+                std::cerr << "[Error] tempIndex exceeded temp array size while copying right sub-array.\n";
+                break;
+            }
+        }
 
         // Copy sorted elements back into original array
-        for (int i = 0; i < k; ++i) {
-            arr[left + i] = temp[i];
+        for (int p = 0; p < tempIndex; ++p) {
+            // Optional: Add a check to ensure left + p does not exceed array bounds
+            // Assuming arr has been allocated with sufficient size
+            arr[left + p] = temp[p];
         }
 
         delete[] temp;
     }
 }
 
+
 // Merge sort for Actor array
 void mergeSortActors(Actor* arr, int left, int right) {
+    // Precondition checks
+    assert(arr != nullptr);
+    assert(left >= 0 && right >= left);
+
     if (left < right) {
         int mid = left + (right - left) / 2;
 
-        // Sort first and second halves
+        // Recursively sort first and second halves
         mergeSortActors(arr, left, mid);
         mergeSortActors(arr, mid + 1, right);
 
         // Merge the sorted halves
-        Actor* temp = new Actor[right - left + 1];
-        int i = left, j = mid + 1, k = 0;
+        int size = right - left + 1;
+        Actor* temp = new Actor[size];
+        int leftIndex = left;      // Left sub-array index
+        int rightIndex = mid + 1;  // Right sub-array index
+        int tempIndex = 0;         // Temp array index
 
-        while (i <= mid && j <= right) {
-            if (strcmp(arr[i].getName(), arr[j].getName()) <= 0) {
-                temp[k++] = arr[i++];
+        // Merge elements into temp array
+        while (leftIndex <= mid && rightIndex <= right) {
+            if (strcmp(arr[leftIndex].getName(), arr[rightIndex].getName()) <= 0) {
+                temp[tempIndex++] = arr[leftIndex++];
             }
             else {
-                temp[k++] = arr[j++];
+                temp[tempIndex++] = arr[rightIndex++];
+            }
+
+            // **Corrected Condition**: Prevent exceeding temp array bounds
+            if (tempIndex >= size) { // Changed from '>' to '>='
+                std::cerr << "[Error] tempIndex exceeded temp array size in mergeSortActors.\n";
+                break;
             }
         }
 
-        // Copy remaining elements
-        while (i <= mid) temp[k++] = arr[i++];
-        while (j <= right) temp[k++] = arr[j++];
+        // Copy remaining elements from left sub-array
+        while (leftIndex <= mid) {
+            if (tempIndex < size) {
+                temp[tempIndex++] = arr[leftIndex++];
+            }
+            else {
+                std::cerr << "[Error] tempIndex exceeded temp array size while copying left sub-array.\n";
+                break;
+            }
+        }
+
+        // Copy remaining elements from right sub-array
+        while (rightIndex <= right) {
+            if (tempIndex < size) {
+                temp[tempIndex++] = arr[rightIndex++];
+            }
+            else {
+                std::cerr << "[Error] tempIndex exceeded temp array size while copying right sub-array.\n";
+                break;
+            }
+        }
 
         // Copy sorted elements back into original array
-        for (int i = 0; i < k; ++i) {
-            arr[left + i] = temp[i];
+        for (int p = 0; p < tempIndex; ++p) {
+            // Optional: Add a check to ensure left + p does not exceed array bounds
+            // Assuming arr has been allocated with sufficient size
+            arr[left + p] = temp[p];
         }
 
         delete[] temp;
     }
 }
+
 
 void MovieApp::displayAllMovies() const {
     if (movieList.isEmpty()) {
@@ -546,7 +627,7 @@ void MovieApp::displayAllActors() const {
     }
 
     static const int MAX_ACTORS = 2000;
-    Actor* actorArray = new Actor[MAX_ACTORS];
+    Actor* actorArray = new Actor[MAX_ACTORS];;
     int count = 0;
 
     // Collect actors into an array
@@ -615,15 +696,31 @@ void MovieApp::displayRecentMovies() const {
     }
 }
 
-void MovieApp::displayMoviesOfActor(const std::string& actorName) const {
+void MovieApp::displayMoviesOfActor(int actorId) const {
     static const int MAX_MOVIES = 2000;
-    // Allocate on the heap
+    // Allocate memory for storing found movies
     Movie* foundMovies = new Movie[MAX_MOVIES];
     int foundCount = 0;
 
-    // Collect all movies that have this actor
+    // Check if the actor ID is valid
+    bool actorExists = false;
+    actorList.display([&](const Actor& a) {
+        if (a.getId() == actorId) {
+            actorExists = true;
+            return true; // Actor found, stop searching
+        }
+        return false;
+        });
+
+    if (!actorExists) {
+        cout << "No actor found with ID " << actorId << ".\n";
+        delete[] foundMovies; // Clean up
+        return;
+    }
+
+    // Collect all movies that have the actor by ID
     movieList.display([&](const Movie& m) {
-        if (m.hasActor(actorName.c_str())) {
+        if (m.hasActor(actorId)) {
             if (foundCount < MAX_MOVIES) {
                 foundMovies[foundCount++] = m;
             }
@@ -632,7 +729,7 @@ void MovieApp::displayMoviesOfActor(const std::string& actorName) const {
         });
 
     if (foundCount == 0) {
-        cout << "No movies found for actor \"" << actorName << "\".\n";
+        cout << "No movies found for actor ID " << actorId << ".\n";
         delete[] foundMovies; // Clean up
         return;
     }
@@ -647,7 +744,7 @@ void MovieApp::displayMoviesOfActor(const std::string& actorName) const {
     }
 
     // Display sorted movies
-    cout << "Movies for actor \"" << actorName << "\" (alphabetical order):\n";
+    cout << "Movies for actor ID " << actorId << " (alphabetical order):\n";
     for (int i = 0; i < foundCount; ++i) {
         cout << " - " << foundMovies[i].getTitle()
             << " (" << foundMovies[i].getReleaseYear() << ")\n";
@@ -656,6 +753,7 @@ void MovieApp::displayMoviesOfActor(const std::string& actorName) const {
     // Clean up heap memory
     delete[] foundMovies;
 }
+
 
 
 
@@ -669,7 +767,7 @@ void MovieApp::displayActorsInMovie(const std::string& movieTitle) const {
             foundMovie = true;
 
             static const int MAX_ACTORS = 2000;
-            Actor actorArray[MAX_ACTORS]; // Ensure Actor has a proper copy constructor
+            Actor* actorArray = new Actor[MAX_ACTORS];; // Ensure Actor has a proper copy constructor
             int count = 0;
 
             // Collect all actors from the movie
@@ -709,6 +807,7 @@ void MovieApp::displayActorsInMovie(const std::string& movieTitle) const {
 }
 
 
+// THIS IS A TEST MAKE SURE TO REMOVE THIS BEFORE SUBMISSION CEDRICCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 // THIS IS A TEST MAKE SURE TO REMOVE THIS BEFORE SUBMISSION CEDRICCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 void MovieApp::runAllTests() {
     cout << "\n========== Running All Tests ==========\n";
@@ -839,12 +938,13 @@ void MovieApp::runAllTests() {
 
     // 10. Test Displaying Movies of an Actor
     cout << "\n-- Test 10: Displaying Movies of an Actor --\n";
-    displayMoviesOfActor("Leonardo Wilhelm DiCaprio");
-    displayMoviesOfActor("Katherine Winslet");
-    displayMoviesOfActor("Bradley Pitt");
-    displayMoviesOfActor("Scarlett Johansson");
-    displayMoviesOfActor("Morgan Freeman");
-    displayMoviesOfActor("Tom Hanks"); // Non-existent actor
+    // Replace actor names with their corresponding IDs
+    displayMoviesOfActor(1000); // Leonardo Wilhelm DiCaprio
+    displayMoviesOfActor(1001); // Katherine Winslet
+    displayMoviesOfActor(1002); // Bradley Pitt
+    displayMoviesOfActor(1004); // Scarlett Johansson
+    displayMoviesOfActor(1003); // Morgan Freeman
+    displayMoviesOfActor(9999); // Tom Hanks (Non-existent actor)
 
     // 11. Test Displaying Actors in a Movie
     cout << "\n-- Test 11: Displaying Actors in a Movie --\n";
@@ -857,6 +957,7 @@ void MovieApp::runAllTests() {
 
     // 12. Test Displaying Actors Known by an Actor
     cout << "\n-- Test 12: Displaying Actors Known by an Actor --\n";
+    // This method still uses actor names, assuming it hasn't been changed to use IDs
     displayActorsKnownBy("Leonardo Wilhelm DiCaprio");
     displayActorsKnownBy("Katherine Winslet");
     displayActorsKnownBy("Bradley Pitt");
@@ -908,9 +1009,6 @@ void MovieApp::runAllTests() {
     recommendActorsByRating(8, 10); // Display actors with rating >= 8
 
     cout << "\n========== All Tests Completed ==========\n";
-
-
-
 }
 
 
@@ -1019,9 +1117,9 @@ void MovieApp::displayActorsKnownBy(const std::string& actorName) const {
     actorList.display([&](const Actor& a) {
         if (strcmp(a.getName(), actorName.c_str()) == 0) {
             startActorId = a.getId();
-            return true;
+            return true; // Stop traversal once found
         }
-        return false;
+        return false; // Continue traversal
         });
 
     if (startActorId == -1) {
@@ -1030,44 +1128,71 @@ void MovieApp::displayActorsKnownBy(const std::string& actorName) const {
     }
 
     // 2) Build adjacency lists using ActorGraph utility
-    int actorIds[ActorGraph::MAX_ACTORS];
-    List<int> adjacencyLists[ActorGraph::MAX_ACTORS];
+    // Move large arrays from stack to heap to prevent C6262 warning
+    int* actorIds = new int[ActorGraph::MAX_ACTORS];
+    List<int>* adjacencyLists = new List<int>[ActorGraph::MAX_ACTORS];
     int totalActors = 0;
 
+    // Build the actor graph
     ActorGraph::buildActorGraph(actorList, movieList, actorIds, totalActors, adjacencyLists);
 
     // 3) Find starting index
     int startIndex = ActorGraph::findActorIndexInArray(startActorId, actorIds, totalActors);
     if (startIndex == -1) {
         cout << "[Error] Actor index not found.\n";
+        // Clean up heap memory before returning
+        delete[] actorIds;
+        delete[] adjacencyLists;
         return;
     }
 
     // 4) Find connected actors using BFS
-    List<int> discoveredIndices = ActorGraph::findConnectedActors(startIndex, adjacencyLists);
+    // Assuming a default maxDepth of 2
+    List<int> discoveredIndices = ActorGraph::findConnectedActors(startIndex, adjacencyLists, 2);
+
+    // Clean up adjacency lists as they're no longer needed
+    delete[] adjacencyLists;
 
     if (discoveredIndices.isEmpty()) {
         cout << "No actors found that \"" << actorName << "\" knows (up to 2 levels).\n";
+        delete[] actorIds; // Clean up actorIds
         return;
     }
 
     // 5) Display results
     cout << "Actors known by \"" << actorName << "\" (up to 2 levels):\n";
 
+    // Iterate through discoveredIndices and print actor names
     discoveredIndices.display([&](int idx) {
-        if (idx == startIndex) return false;
+        // Ensure idx is within bounds
+        if (idx < 0 || idx >= totalActors) {
+            cout << "[Warning] Invalid actor index " << idx << " encountered.\n";
+            return false; // Continue traversal
+        }
+
         int realActorId = actorIds[idx];
+        bool actorFound = false;
 
         actorList.display([&](const Actor& a) {
             if (a.getId() == realActorId) {
                 cout << " - " << a.getName() << endl;
-                return true;
+                actorFound = true;
+                return true; // Stop traversal once actor is found
             }
-            return false;
+            return false; // Continue traversal
             });
-        return false;
+
+        if (!actorFound) {
+            cout << "[Warning] Actor with ID " << realActorId << " not found in actorList.\n";
+        }
+
+        return false; // Continue traversal
         });
+
+    // Clean up heap memory
+    delete[] actorIds;
 }
+
 
 int MovieApp::getNextActorId() const {
     return nextActorId;
