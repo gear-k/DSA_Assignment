@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DSA_Assignment.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Actor.cpp">
@@ -53,10 +53,17 @@
     <ClInclude Include="RatingBST.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GetKeySpecializations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HashTable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="actors.csv" />
     <None Include="cast.csv" />
     <None Include="movies.csv" />
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

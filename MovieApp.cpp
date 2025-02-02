@@ -8,6 +8,7 @@
 #include <cstring>
 #include <cstdlib>   // atoi
 #include <ctime>     // for date-based logic (e.g., recent movies)
+#include <cassert> // for debugging purposes
 
 // Helper to trim quotes/spaces
 static std::string trimQuotes(const std::string& str) {
@@ -63,13 +64,13 @@ bool MovieApp::isAdminMode() const {
 void MovieApp::readActors(const std::string& filename) {
     std::ifstream fin(filename.c_str());
     if (!fin.is_open()) {
-        std::cerr << "[Error] Could not open file: " << filename << "\n";
+        //std::cerr << "[Error] Could not open file: " << filename << "\n";
         return;
     }
 
     std::string header;
     if (!std::getline(fin, header)) {
-        std::cerr << "[Error] File is empty: " << filename << "\n";
+        //std::cerr << "[Error] File is empty: " << filename << "\n";
         fin.close();
         return;
     }
@@ -87,7 +88,7 @@ void MovieApp::readActors(const std::string& filename) {
         std::getline(ss, birthStr, ',');
 
         if (idStr.empty() || nameStr.empty() || birthStr.empty()) {
-            std::cerr << "[Warning] Malformed row: " << line << "\n";
+            /*std::cerr << "[Warning] Malformed row: " << line << "\n";*/
             continue;
         }
 
@@ -133,7 +134,7 @@ void MovieApp::readMovies(const std::string& filename) {
         std::getline(ss, yearStr, ',');
 
         if (idStr.empty() || titleStr.empty() || yearStr.empty()) {
-            std::cerr << "[Warning] Malformed row: " << line << "\n";
+            //std::cerr << "[Warning] Malformed row: " << line << "\n";
             continue;
         }
 
@@ -177,7 +178,7 @@ void MovieApp::readCast(const std::string& filename) {
         std::getline(ss, movieIdStr, ',');
 
         if (actorIdStr.empty() || movieIdStr.empty()) {
-            std::cerr << "[Warning] Malformed row: " << line << "\n";
+            //std::cerr << "[Warning] Malformed row: " << line << "\n";
             continue;
         }
 
@@ -192,7 +193,7 @@ void MovieApp::readCast(const std::string& filename) {
             movie->addActor(*actor);
         }
         else {
-            std::cerr << "[Warning] Invalid actorId or movieId in cast: " << line << "\n";
+            //std::cerr << "[Warning] Invalid actorId or movieId in cast: " << line << "\n";
         }
     }
     fin.close();
@@ -399,21 +400,26 @@ static void mergeSortMovies(Movie* arr, int left, int right) {
 
     // Merge
     int size = right - left + 1;
-    Movie* temp = new Movie[size];
+    // Value-initialize the temporary array to help with static analysis.
+    Movie* temp = new Movie[size]();
     int i = left, j = mid + 1, k = 0;
 
     while (i <= mid && j <= right) {
         if (std::strcmp(arr[i].getTitle(), arr[j].getTitle()) <= 0) {
+            assert(k < size);
             temp[k++] = arr[i++];
         }
         else {
+            assert(k < size);
             temp[k++] = arr[j++];
         }
     }
     while (i <= mid) {
+        assert(k < size);
         temp[k++] = arr[i++];
     }
     while (j <= right) {
+        assert(k < size);
         temp[k++] = arr[j++];
     }
     for (int p = 0; p < size; ++p) {
@@ -421,6 +427,7 @@ static void mergeSortMovies(Movie* arr, int left, int right) {
     }
     delete[] temp;
 }
+
 
 void MovieApp::displayAllMovies() const {
     if (movieTable.isEmpty()) {
@@ -467,24 +474,28 @@ static void mergeSortActors(Actor* arr, int left, int right) {
     mergeSortActors(arr, mid + 1, right);
 
     int size = right - left + 1;
-    Actor* temp = new Actor[size];
+    // Value-initialize the temporary array.
+    Actor* temp = new Actor[size]();
     int i = left, j = mid + 1, k = 0;
 
     while (i <= mid && j <= right) {
         if (std::strcmp(arr[i].getName(), arr[j].getName()) <= 0) {
+            assert(k < size);
             temp[k++] = arr[i++];
         }
         else {
+            assert(k < size);
             temp[k++] = arr[j++];
         }
     }
     while (i <= mid) {
+        assert(k < size);
         temp[k++] = arr[i++];
     }
     while (j <= right) {
+        assert(k < size);
         temp[k++] = arr[j++];
     }
-
     for (int p = 0; p < size; ++p) {
         arr[left + p] = temp[p];
     }
@@ -649,147 +660,71 @@ void MovieApp::displayActorsInMovie(const std::string& movieTitle) const {
     }
 }
 
-//---------------------------------------------------------------------------
-// BFS-based "displayActorsKnownBy" (2-level acquaintances)
-//---------------------------------------------------------------------------
-#include <cassert>
-
-// Our custom BFS queue if needed:
-struct BFSQueue {
-    struct Pair { int idx; int depth; };
-    Pair data[2000];
-    int front, rear, count;
-    BFSQueue() : front(0), rear(-1), count(0) {}
-
-    bool isEmpty() const { return (count == 0); }
-    bool isFull()  const { return (count == 2000); }
-
-    bool enqueue(int i, int d) {
-        if (isFull()) return false;
-        rear = (rear + 1) % 2000;
-        data[rear].idx = i;
-        data[rear].depth = d;
-        count++;
-        return true;
-    }
-    bool dequeue(Pair& out) {
-        if (isEmpty()) return false;
-        out = data[front];
-        front = (front + 1) % 2000;
-        count--;
-        return true;
-    }
-};
-
-void MovieApp::buildActorGraph(
-    int actorIds[],
-    int& actorCount,
-    List<int>* adjacencyLists,
-    const int MAX_ACTORS
-) const {
-    // Collect all actor IDs first
-    actorCount = 0;
-    actorTable.forEach([&](const Actor& a) -> bool {
-        if (actorCount < MAX_ACTORS) {
-            actorIds[actorCount++] = a.getId();
-        }
-        return false;
-        });
-
-    // Build adjacency by iterating over all movies
-    movieTable.forEach([&](const Movie& m) -> bool {
-        // gather the indices of all actors in this movie
-        static const int TEMP_SIZE = 300;
-        int tmpIdx[TEMP_SIZE];
-        int tmpCount = 0;
-
-        m.getActors().display([&](const Actor& a) {
-            // find index in actorIds
-            int idx = findActorIndexInArray(a.getId(), actorIds, actorCount);
-            if (idx != -1 && tmpCount < TEMP_SIZE) {
-                tmpIdx[tmpCount++] = idx;
-            }
-            return false;
-            });
-
-        // For each pair in tmpIdx, make them neighbors
-        for (int i = 0; i < tmpCount; i++) {
-            for (int j = i + 1; j < tmpCount; j++) {
-                adjacencyLists[tmpIdx[i]].add(tmpIdx[j]);
-                adjacencyLists[tmpIdx[j]].add(tmpIdx[i]);
-            }
-        }
-        return false;
-        });
-}
-
-int MovieApp::findActorIndexInArray(int actorId, const int actorIds[], int count) const {
-    for (int i = 0; i < count; i++) {
-        if (actorIds[i] == actorId) {
-            return i;
-        }
-    }
-    return -1;
-}
 
 void MovieApp::displayActorsKnownBy(const std::string& actorName) const {
-    // 1) Find the starting actor ID by name
+    // 1) Find the starting actor's ID by name
     int startActorId = -1;
     actorTable.forEach([&](const Actor& a) -> bool {
         if (std::strcmp(a.getName(), actorName.c_str()) == 0) {
             startActorId = a.getId();
-            return true; // stop
+            return true; // Stop iterating once found
         }
         return false;
         });
+
+    // If not found, display error and stop
     if (startActorId == -1) {
         std::cout << "[Error] Actor \"" << actorName << "\" not found.\n";
         return;
     }
 
-    // 2) Build adjacency
+    // 2) Prepare structures to build the adjacency lists
     int* actorIds = new int[ActorGraph::MAX_ACTORS];
     List<int>* adjacencyLists = new List<int>[ActorGraph::MAX_ACTORS];
     int totalActors = 0;
 
+    // 3) Build the actor graph using ActorGraph's method
     ActorGraph::buildActorGraph(actorTable, movieTable, actorIds, totalActors, adjacencyLists);
 
-    // 3) Find the start index
+    // 4) Find the start index in actorIds
     int startIndex = ActorGraph::findActorIndexInArray(startActorId, actorIds, totalActors);
     if (startIndex == -1) {
         std::cout << "[Error] Could not map actor to index.\n";
-        delete[] actorIds;
         delete[] adjacencyLists;
+        delete[] actorIds;
         return;
     }
 
-    // 4) BFS up to depth=2
+    // 5) Use ActorGraph's BFS to find connected actors up to depth=2
     List<int> discovered = ActorGraph::findConnectedActors(startIndex, adjacencyLists, 2);
 
     if (discovered.isEmpty()) {
         std::cout << "No actors found that \"" << actorName << "\" knows (up to 2 levels).\n";
-        delete[] actorIds;
         delete[] adjacencyLists;
+        delete[] actorIds;
         return;
     }
 
-    // 5) Display
+    // 6) Display the results
     std::cout << "Actors known by \"" << actorName << "\" (up to 2 levels):\n";
     discovered.display([&](int idx) {
-        if (idx < 0 || idx >= totalActors) return false;
+        // idx is an index into actorIds[], so we retrieve the actual actorId
+        if (idx < 0 || idx >= totalActors) return false;  // safety check
         int realActorId = actorIds[idx];
 
-        // Find the actual Actor
+        // Look up the Actor* in the actorTable
         Actor* aPtr = actorTable.find(realActorId);
         if (aPtr) {
             std::cout << " - " << aPtr->getName() << "\n";
         }
-        return false;
+        return false; // continue iteration over discovered
         });
 
+    // Clean up
     delete[] adjacencyLists;
     delete[] actorIds;
 }
+
 
 //---------------------------------------------------------------------------
 // Ratings
@@ -855,6 +790,7 @@ static void printTestResult(const std::string& testName, bool passed, const std:
 // Enhanced runAllTests method
 void MovieApp::runAllTests() {
     std::cout << "\n========== Running All Tests ==========\n";
+    int initialActorCount = actorTable.getCount();  // Track the initial count of actors
 
     // 1) Clear existing data
     printTestHeader("Test 1: Clearing Existing Data");
@@ -880,6 +816,10 @@ void MovieApp::runAllTests() {
     bool test3_passed = isActorIdUsed(1000) && isActorIdUsed(1001) && isActorIdUsed(1002);
     printTestResult("Adding valid actors", test3_passed);
 
+    // Update initialActorCount after successfully adding actors
+    initialActorCount = actorTable.getCount();  // Now tracks the correct count
+
+
     // 4) Add Movies with Valid Data
     printTestHeader("Test 4: Adding Movies with Valid Data");
     addNewMovie("Inception", "A mind-bending thriller", 2010); // Expected ID=5000
@@ -892,7 +832,6 @@ void MovieApp::runAllTests() {
     // 5) Attempt to Add Actors in User Mode (Should Fail)
     printTestHeader("Test 5: Adding Actors in User Mode");
     setAdminMode(false); // Disable admin mode
-    int initialActorCount = actorTable.getCount();
     addNewActor("Tom Hanks", 1956); // Should not be added
     bool test5_passed = (actorTable.getCount() == initialActorCount);
     printTestResult("Prevent adding actors in user mode", test5_passed);
@@ -908,13 +847,13 @@ void MovieApp::runAllTests() {
     printTestHeader("Test 7: Adding Actor with Empty Name");
     setAdminMode(true); // Enable admin mode
     addNewActor("   ", 1980); // Should fail
-    bool test7_passed = (actorTable.getCount() == initialActorCount + 3); // No new actor added
+    bool test7_passed = (actorTable.getCount() == initialActorCount); // Correct
     printTestResult("Prevent adding actor with empty name", test7_passed, "Actor count should remain unchanged");
 
     // 8) Attempt to Add Actor with Invalid Birth Year
     printTestHeader("Test 8: Adding Actor with Invalid Birth Year");
     addNewActor("Samuel L. Jackson", -5); // Should fail
-    bool test8_passed = (actorTable.getCount() == initialActorCount + 3);
+    bool test8_passed = (actorTable.getCount() == initialActorCount); // Correct
     printTestResult("Prevent adding actor with invalid birth year", test8_passed, "Actor count should remain unchanged");
 
     // 9) Add Actor with Leading/Trailing Whitespace

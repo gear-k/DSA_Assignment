@@ -130,7 +130,7 @@
   <ItemGroup>
     <ClCompile Include="Actor.cpp" />
     <ClCompile Include="ActorGraph.cpp" />
-    <ClCompile Include="DSA_Assignment.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="Movie.cpp" />
     <ClCompile Include="MovieApp.cpp" />
     <ClCompile Include="RatingBST.cpp" />
