@@ -122,6 +122,7 @@ void displayMenu(bool isAdmin) {
         std::cout << "4.  Update Actor Details\n";
         std::cout << "5.  Update Movie Details\n";
         std::cout << "14. Run All Tests\n"; // Admin-only feature
+        std::cout << "19. Toggle Admin/User Mode\n";
         std::cout << "13. Exit\n";
     }
     else {
@@ -136,6 +137,7 @@ void displayMenu(bool isAdmin) {
         std::cout << "16. Set Movie Rating\n";
         std::cout << "17. Recommend Movies by Rating\n";
         std::cout << "18. Recommend Actors by Rating\n";
+        std::cout << "19. Toggle Admin/User Mode\n";
         std::cout << "13. Exit\n";
     }
     std::cout << "Enter your choice: ";
@@ -238,12 +240,12 @@ int main() {
                 break;
             }
             case 3: {
-                int actorId = promptForInt("Enter actor ID (1-99999, or '0' to cancel): ", 1, 99999, true);
+                int actorId = promptForInt("Enter actor ID (1-99999, or '0' to cancel): ", 1, 999999999, true);
                 if (actorId == 0) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
                 }
-                int movieId = promptForInt("Enter movie ID (1-99999, or '0' to cancel): ", 1, 99999, true);
+                int movieId = promptForInt("Enter movie ID (1-99999, or '0' to cancel): ", 1, 999999999, true);
                 if (movieId == 0) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
@@ -252,7 +254,7 @@ int main() {
                 break;
             }
             case 4: {
-                int actorId = promptForInt("Enter actor ID (1-99999, or '0' to cancel): ", 1, 99999, true);
+                int actorId = promptForInt("Enter actor ID (1-99999, or '0' to cancel): ", 1, 999999999, true);
                 if (actorId == 0) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
@@ -301,6 +303,12 @@ int main() {
                 std::cout << "[Admin] Running all tests...\n";
                 app.runAllTests();
                 break;
+            case 19: {
+                // Switch from ADMIN mode -> USER mode
+                app.setAdminMode(false);
+                std::cout << "[Switched to USER mode]\n";
+                break;
+            }
             case 13:
                 std::cout << "Exiting... Thank you for using the Movie Management System!\n";
                 break;
@@ -441,7 +449,7 @@ int main() {
                 break;
             }
             case 15: {
-                int actorId = promptForInt("Enter actor ID (1-99999, '0' to cancel): ", 1, 99999, true);
+                int actorId = promptForInt("Enter actor ID (1-99999, '0' to cancel): ", 1, 999999999, true);
                 if (actorId == 0) {
                     std::cout << "[Cancelled]\n";
                     break;
@@ -455,7 +463,7 @@ int main() {
                 break;
             }
             case 16: {
-                int movieId = promptForInt("Enter movie ID (1-99999, '0' to cancel): ", 1, 99999, true);
+                int movieId = promptForInt("Enter movie ID (1-99999, '0' to cancel): ", 1, 999999999, true);
                 if (movieId == 0) {
                     std::cout << "[Cancelled]\n";
                     break;
@@ -499,6 +507,21 @@ int main() {
             case 13:
                 std::cout << "Exiting... Thank you for using the Movie Management System!\n";
                 break;
+            case 19: {
+                // Prompt for admin password
+                std::cout << "Enter admin password: ";
+                std::string password;
+                std::getline(std::cin, password);
+
+                if (password == "dsaadmin") {
+                    app.setAdminMode(true);
+                    std::cout << "[Switched to ADMIN mode]\n";
+                }
+                else {
+                    std::cout << "[Error] Incorrect password; staying in user mode.\n";
+                }
+                break;
+            }
             default:
                 std::cout << "[Error] Invalid user menu choice!\n";
                 break;

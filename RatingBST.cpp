@@ -12,6 +12,7 @@
  *
  ***************************************************************************/
 
+
 #include "RatingBST.h"
 #include <iostream>
 
@@ -39,8 +40,7 @@ RatingBST::~RatingBST() {
  * @param node Pointer to the current BST node.
  */
 void RatingBST::clearTree(BSTNode* node) {
-    if (!node)
-        return;
+    if (!node) return;
     clearTree(node->left);
     clearTree(node->right);
     delete node;
@@ -76,10 +76,10 @@ void RatingBST::insert(const Actor& actor) {
 void RatingBST::insertMovie(BSTNode*& node, const Movie& movie) {
     if (!node) {
         node = new BSTNode(movie.getRating());
-        node->movies.push_back(movie);
+        node->movies.add(movie);
     }
     else if (movie.getRating() == node->rating) {
-        node->movies.push_back(movie);
+        node->movies.add(movie);
     }
     else if (movie.getRating() < node->rating) {
         insertMovie(node->left, movie);
@@ -101,10 +101,10 @@ void RatingBST::insertMovie(BSTNode*& node, const Movie& movie) {
 void RatingBST::insertActor(BSTNode*& node, const Actor& actor) {
     if (!node) {
         node = new BSTNode(actor.getRating());
-        node->actors.push_back(actor);
+        node->actors.add(actor);
     }
     else if (actor.getRating() == node->rating) {
-        node->actors.push_back(actor);
+        node->actors.add(actor);
     }
     else if (actor.getRating() < node->rating) {
         insertActor(node->left, actor);
@@ -120,12 +120,16 @@ void RatingBST::insertActor(BSTNode*& node, const Actor& actor) {
  * @param node Pointer to the current BST node.
  */
 void RatingBST::inOrderMovies(BSTNode* node) const {
-    if (!node)
-        return;
+    if (!node) return;
+
     inOrderMovies(node->left);
-    for (const auto& movie : node->movies) {
-        movie.displayDetails();
-    }
+
+    // Display all movies in node->movies
+    node->movies.display([](const Movie& m) {
+        m.displayDetails();
+        return false; // Keep going
+        });
+
     inOrderMovies(node->right);
 }
 
@@ -135,12 +139,16 @@ void RatingBST::inOrderMovies(BSTNode* node) const {
  * @param node Pointer to the current BST node.
  */
 void RatingBST::inOrderActors(BSTNode* node) const {
-    if (!node)
-        return;
+    if (!node) return;
+
     inOrderActors(node->left);
-    for (const auto& actor : node->actors) {
-        actor.displayDetails();
-    }
+
+    // Display all actors in node->actors
+    node->actors.display([](const Actor& a) {
+        a.displayDetails();
+        return false; // Keep going
+        });
+
     inOrderActors(node->right);
 }
 
@@ -166,17 +174,25 @@ void RatingBST::displayAllActors() const {
  * @param maxRating The maximum rating (inclusive).
  */
 void RatingBST::rangeMovies(BSTNode* node, int minRating, int maxRating) const {
-    if (!node)
-        return;
-    if (node->rating >= minRating)
+    if (!node) return;
+
+    // Traverse left subtree if needed
+    if (node->rating >= minRating) {
         rangeMovies(node->left, minRating, maxRating);
-    if (node->rating >= minRating && node->rating <= maxRating) {
-        for (const auto& movie : node->movies) {
-            movie.displayDetails();
-        }
     }
-    if (node->rating <= maxRating)
+
+    // Display movies at this node if rating is within range
+    if (node->rating >= minRating && node->rating <= maxRating) {
+        node->movies.display([](const Movie& m) {
+            m.displayDetails();
+            return false;
+            });
+    }
+
+    // Traverse right subtree if needed
+    if (node->rating <= maxRating) {
         rangeMovies(node->right, minRating, maxRating);
+    }
 }
 
 /**
@@ -187,17 +203,25 @@ void RatingBST::rangeMovies(BSTNode* node, int minRating, int maxRating) const {
  * @param maxRating The maximum rating (inclusive).
  */
 void RatingBST::rangeActors(BSTNode* node, int minRating, int maxRating) const {
-    if (!node)
-        return;
-    if (node->rating >= minRating)
+    if (!node) return;
+
+    // Traverse left subtree if needed
+    if (node->rating >= minRating) {
         rangeActors(node->left, minRating, maxRating);
-    if (node->rating >= minRating && node->rating <= maxRating) {
-        for (const auto& actor : node->actors) {
-            actor.displayDetails();
-        }
     }
-    if (node->rating <= maxRating)
+
+    // Display actors at this node if rating is within range
+    if (node->rating >= minRating && node->rating <= maxRating) {
+        node->actors.display([](const Actor& a) {
+            a.displayDetails();
+            return false;
+            });
+    }
+
+    // Traverse right subtree if needed
+    if (node->rating <= maxRating) {
         rangeActors(node->right, minRating, maxRating);
+    }
 }
 
 /**

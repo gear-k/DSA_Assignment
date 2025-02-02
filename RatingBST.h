@@ -1,9 +1,9 @@
 #ifndef RATING_BST_H
 #define RATING_BST_H
 
-#include <vector>
 #include "Movie.h"
 #include "Actor.h"
+#include "List.h"      // Use your custom List instead of <vector>
 
 /***************************************************************************
  * RatingBST.h
@@ -15,20 +15,20 @@
  * Features Highlight:
  *   - Binary Search Tree (BST) to store movies and actors by rating.
  *   - Insertion, in-order traversal, and range queries for both movies and actors.
- *
  ***************************************************************************/
+
 
  /**
   * @brief Structure representing a node in the Rating Binary Search Tree.
   *
-  * Each node stores a rating value as key along with vectors of movies
+  * Each node stores a rating value as key, along with lists of movies
   * and actors that have that rating. It also has pointers to the left and right
   * child nodes.
   */
 struct BSTNode {
-    int rating;                     // Key: Rating
-    std::vector<Movie> movies;      // Movies with this rating
-    std::vector<Actor> actors;      // Actors with this rating
+    int rating;           // Key: Rating
+    List<Movie> movies;   // Movies with this rating
+    List<Actor> actors;   // Actors with this rating
     BSTNode* left;
     BSTNode* right;
 
