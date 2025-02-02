@@ -130,6 +130,8 @@
   <ItemGroup>
     <ClCompile Include="Actor.cpp" />
     <ClCompile Include="ActorGraph.cpp" />
+    <ClCompile Include="HashTable.cpp" />
+    <ClCompile Include="List.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Movie.cpp" />
     <ClCompile Include="MovieApp.cpp" />
@@ -138,7 +140,6 @@
   <ItemGroup>
     <ClInclude Include="Actor.h" />
     <ClInclude Include="ActorGraph.h" />
-    <ClInclude Include="GetKeySpecializations.h" />
     <ClInclude Include="HashTable.h" />
     <ClInclude Include="List.h" />
     <ClInclude Include="Movie.h" />

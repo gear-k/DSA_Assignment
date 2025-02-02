@@ -34,6 +34,8 @@ private:
     int rating;              ///< Movie rating in the range 0 to 10
 
 public:
+    // Compare two movies (modify the criteria as needed)
+    bool operator==(const Movie& other) const;
     // --------------------------
     // Constructors and Destructor
     // --------------------------

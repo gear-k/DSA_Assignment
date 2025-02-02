@@ -164,6 +164,15 @@ int Actor::getAge() const {
 }
 
 /**
+ * @brief Compares two Actor objects for equality.
+ *
+ * Two actors are considered equal if their IDs are the same.
+ *
+ * @param other The Actor object to compare with.
+ * @return true if the IDs match, false otherwise.
+ */
+
+/**
  * @brief Displays the actor's details.
  *
  * Outputs the actor's ID, name, birth year, age, and rating to the standard output.

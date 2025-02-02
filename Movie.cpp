@@ -29,6 +29,18 @@ Movie::Movie()
 }
 
 /**
+ * @brief Equality comparison operator for Movie.
+ *
+ * Compares two Movie objects based on their IDs.
+ *
+ * @param other The other Movie object to compare with.
+ * @return True if the IDs are equal; false otherwise.
+ */
+bool Movie::operator==(const Movie& other) const {
+    return this->id == other.id;
+}
+
+/**
  * @brief Parameterized constructor for Movie.
  *
  * Initializes the movie with the provided title, plot, release year, and ID.
