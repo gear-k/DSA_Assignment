@@ -273,7 +273,7 @@ int main() {
                 break;
             }
             case 5: {
-                int movieId = promptForInt("Enter movie ID (1-99999, or '0' to cancel): ", 1, 99999, true);
+                int movieId = promptForInt("Enter movie ID (1-99999, or '0' to cancel): ", 1, 999999999, true);
                 if (movieId == 0) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
@@ -401,7 +401,7 @@ int main() {
                     }
 
                     // Prompt the user to select the correct actor ID
-                    int chosenId = promptForInt("Enter the correct Actor ID (or '0' to cancel): ", 1, 999999, true);
+                    int chosenId = promptForInt("Enter the correct Actor ID (or '0' to cancel): ", 1, 999999999, true);
                     if (chosenId == 0) {
                         std::cout << "[Cancelled] Returning to main menu.\n";
                         break;
