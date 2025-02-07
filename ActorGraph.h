@@ -29,69 +29,25 @@
   */
 class ActorGraph {
 public:
-    static const int MAX_ACTORS = 2000;
+    // (The MAX_ACTORS constant is no longer a hard limit for actor IDs.)
+    static const int INITIAL_ACTOR_CAPACITY = 2000;
 
-    /**
-     * @brief A minimal queue used for BFS traversal.
-     *
-     * The BFSQueue maintains a circular queue of Pair elements, where each Pair
-     * contains an actor index and the depth level in the BFS traversal.
-     */
+    // --- BFSQueue (remains unchanged) ---
     struct BFSQueue {
-        /**
-         * @brief Structure representing an item in the BFS queue.
-         *
-         * @param idx The index of the actor in the actorIds array.
-         * @param depth The depth level at which the actor was discovered.
-         */
         struct Pair {
             int idx;
             int depth;
         };
 
-        Pair data[2000]; ///< Array to store BFS pairs.
-        int front;       ///< Index of the front element.
-        int rear;        ///< Index of the rear element.
-        int count;       ///< Number of elements in the queue.
+        Pair data[2000];
+        int front;
+        int rear;
+        int count;
 
-        /**
-         * @brief Constructs a new BFSQueue.
-         *
-         * Initializes the queue indices and count.
-         */
         BFSQueue();
-
-        /**
-         * @brief Checks if the queue is empty.
-         *
-         * @return True if the queue is empty; false otherwise.
-         */
         bool isEmpty() const;
-
-        /**
-         * @brief Checks if the queue is full.
-         *
-         * @return True if the queue is full; false otherwise.
-         */
         bool isFull() const;
-
-        /**
-         * @brief Enqueues an element into the BFSQueue.
-         *
-         * @param i The actor index to enqueue.
-         * @param d The BFS depth of the actor.
-         * @return True if the enqueue operation is successful; false if the queue is full.
-         */
         bool enqueue(int i, int d);
-
-        /**
-         * @brief Dequeues an element from the BFSQueue.
-         *
-         * The removed element is returned via the out parameter.
-         *
-         * @param out Reference to a Pair that will hold the dequeued element.
-         * @return True if an element was successfully dequeued; false if the queue is empty.
-         */
         bool dequeue(Pair& out);
     };
 
@@ -99,21 +55,22 @@ public:
      * @brief Builds the actor graph using hash tables for actors and movies.
      *
      * This function collects actor IDs from the actorTable and then, for each movie
-     * in the movieTable, it finds the indices of the actors that participated in that movie.
+     * in the movieTable, finds the indices of the actors that participated in that movie.
      * It then adds each pair of actors (from the same movie) to each other's adjacency list.
      *
      * @param actorTable The hash table containing actors.
      * @param movieTable The hash table containing movies.
-     * @param actorIds An array to store actor IDs.
+     * @param actorIds A reference to a pointer that will point to a dynamically allocated array of actor IDs.
      * @param actorCount Reference to an integer to store the total number of actors.
-     * @param adjacencyLists An array of List<int> representing each actor's adjacency list.
+     * @param adjacencyLists A reference to a pointer to a dynamically allocated array of List<int>
+     *                       (each element representing an actor’s adjacency list).
      */
     static void buildActorGraph(
         const HashTable<Actor>& actorTable,
         const HashTable<Movie>& movieTable,
-        int actorIds[],
+        int*& actorIds,
         int& actorCount,
-        List<int>* adjacencyLists
+        List<int>*& adjacencyLists
     );
 
     /**
@@ -128,6 +85,8 @@ public:
      */
     static int findActorIndexInArray(int actorId, const int actorIds[], int count);
 
+   
+
     /**
      * @brief Finds all actors connected to the starting actor within a given maximum depth.
      *
@@ -140,11 +99,7 @@ public:
      * @param maxDepth The maximum depth for BFS traversal (default is 2).
      * @return A List<int> containing the indices of all connected actors discovered.
      */
-    static List<int> findConnectedActors(
-        int startIndex,
-        const List<int>* adjacencyLists,
-        int maxDepth = 2
-    );
+    static List<int> findConnectedActors(int startIndex, const List<int>* adjacencyLists, int actorCount, int maxDepth);
 };
 
 #endif // ACTOR_GRAPH_H
