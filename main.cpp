@@ -299,10 +299,10 @@ int main() {
                 app.updateMovieDetails(movieId, newTitle, newPlot, newYear);
                 break;
             }
-            case 14:
-                std::cout << "[Admin] Running all tests...\n";
-                app.runAllTests();
-                break;
+            //case 14:
+            //    std::cout << "[Admin] Running all tests...\n";
+            //    app.runAllTests();
+            //    break;
             case 19: {
                 // Switch from ADMIN mode -> USER mode
                 app.setAdminMode(false);
