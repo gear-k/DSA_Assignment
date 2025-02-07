@@ -145,8 +145,7 @@ int HashTable<T>::getCount() const {
     return size();
 }
 
-// ***** Explicit Template Instantiation *****
-// Add explicit instantiation for each type you plan to use.
+
 template class HashTable<int>;
 template class HashTable<Actor>;
 template class HashTable<Movie>;

@@ -280,6 +280,7 @@ const List<Actor>& Movie::getActors() const {
 void Movie::displayDetails() const {
     std::cout << "Movie ID: " << id
         << ", Title: " << title
+        << ", Plot: " << plot
         << ", Year: " << releaseYear
         << ", Rating: " << rating
         << std::endl;

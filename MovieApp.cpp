@@ -113,6 +113,7 @@ void MovieApp::readMovies(const std::string& filename) {
         return;
     }
 
+    // Read (and optionally ignore) the header line
     std::string header;
     if (!std::getline(fin, header)) {
         std::cerr << "[Error] File is empty: " << filename << "\n";
@@ -125,23 +126,31 @@ void MovieApp::readMovies(const std::string& filename) {
         if (line.empty()) continue;
 
         std::stringstream ss(line);
-        std::string idStr, titleStr, yearStr;
 
-        // CSV assumed format: movieId,title,releaseYear (or maybe 4 fields if there's a plot)
+        // We now expect 4 comma-separated fields: id, title, plot, year
+        std::string idStr, titleStr, plotStr, yearStr;
+
         std::getline(ss, idStr, ',');
         std::getline(ss, titleStr, ',');
+        std::getline(ss, plotStr, ',');
         std::getline(ss, yearStr, ',');
 
-        if (idStr.empty() || titleStr.empty() || yearStr.empty()) {
-            //std::cerr << "[Warning] Malformed row: " << line << "\n";
+        // Basic validation
+        if (idStr.empty() || titleStr.empty() || plotStr.empty() || yearStr.empty()) {
+            std::cerr << "[Warning] Malformed row: " << line << "\n";
             continue;
         }
 
         int id = std::atoi(idStr.c_str());
         int year = std::atoi(yearStr.c_str());
-        titleStr = trimQuotes(titleStr);
 
-        Movie movie(titleStr.c_str(), "", year, id);
+        // If you have a trimQuotes function to remove surrounding quotes
+        titleStr = trimQuotes(titleStr);
+        plotStr = trimQuotes(plotStr);
+
+        // Pass the plot into the Movie constructor
+        Movie movie(titleStr.c_str(), plotStr.c_str(), year, id);
+
         movieTable.insert(movie);
 
         if (id >= nextMovieId) {
@@ -150,6 +159,7 @@ void MovieApp::readMovies(const std::string& filename) {
     }
     fin.close();
 }
+
 
 void MovieApp::readCast(const std::string& filename) {
     std::ifstream fin(filename.c_str());
@@ -902,14 +912,15 @@ void MovieApp::runAllTests() {
     // 14) Read Movies from Valid CSV
     printTestHeader("Test 14: Reading Movies from Valid CSV");
     std::ofstream validMoviesCSV("valid_movies.csv");
-    validMoviesCSV << "id,title,year\n"
-        << "112384,\"Apollo 13\",1995\n"
-        << "104257,\"A Few Good Men\",1992\n"
-        << "109830,\"Forrest Gump\",1994\n"
-        << "93779,\"The Princess Bride\",1987\n"
-        << "95953,\"Rain Man\",1988\n"
-        << "95913,\"Rain Man\",1988\n";
+    validMoviesCSV << "id,title,plot,year\n"
+        << "112384,\"Apollo 13\",\"NASA mission gone wrong\",1995\n"
+        << "104257,\"A Few Good Men\",\"Military courtroom drama\",1992\n"
+        << "109830,\"Forrest Gump\",\"Life of Forrest\",1994\n"
+        << "93779,\"The Princess Bride\",\"Fairytale adventure\",1987\n"
+        << "95953,\"Rain Man\",\"Two brothers road trip\",1988\n"
+        << "95913,\"Rain Man\",\"Two brothers road trip\",1988\n";
     validMoviesCSV.close();
+
 
     readMovies("valid_movies.csv");
     bool test14_passed = isMovieIdUsed(112384) && isMovieIdUsed(104257) && isMovieIdUsed(109830) &&
@@ -968,11 +979,11 @@ void MovieApp::runAllTests() {
     // 17) Read Movies from Malformed CSV
     printTestHeader("Test 17: Reading Movies from Malformed CSV");
     std::ofstream malformedMoviesCSV("malformed_movies.csv");
-    malformedMoviesCSV << "id,title,year\n"
-        << "3001,\"Invalid Movie\"\n" // Missing year
-        << "3002,,2000\n"              // Missing title
-        << ",\"No ID\",1990\n"         // Missing ID
-        << "3003,\"Valid Movie\",2010\n"; // Valid entry
+    malformedMoviesCSV << "id,title,plot,year\n"
+        << "3001,\"Invalid Movie\",\"Missing year\",\n"    // empty year
+        << "3002,,\"No plot\",2000\n"                      // empty title
+        << ",\"No ID\",\"No ID?\",1990\n"                  // empty id
+        << "3003,\"Valid Movie\",\"Some Plot\",2010\n";    // this one is valid
     malformedMoviesCSV.close();
 
     int moviesBefore = movieTable.getCount();
@@ -1092,10 +1103,13 @@ void MovieApp::runAllTests() {
     // 35) Test Reading Duplicate Movies in CSV
     printTestHeader("Test 35: Reading Duplicate Movies from CSV");
     std::ofstream duplicateMoviesCSV("duplicate_movies.csv");
-    duplicateMoviesCSV << "id,title,year\n"
-        << "112384,\"Apollo 13\",1995\n" // Duplicate ID
-        << "3004,\"New Movie\",2020\n";
+    duplicateMoviesCSV << "id,title,plot,year\n"
+        // "112384" is a known ID => triggers duplicate
+        << "112384,\"Apollo 13\",\"NASA mission gone wrong\",1995\n"
+        // "3004" is a new ID => should be inserted
+        << "3004,\"New Movie\",\"A brand new plot\",2020\n";
     duplicateMoviesCSV.close();
+
 
     int moviesBeforeDup = movieTable.getCount();
     readMovies("duplicate_movies.csv");
