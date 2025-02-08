@@ -8,7 +8,7 @@
 #include <cstdlib>   // atoi
 #include <ctime>     // for date-based logic (e.g., recent movies)
 #include <cassert> // for debugging purposes
-
+#include <limits> // For std::numeric_limits
 
 // ---------------------------------------------------------------------------
 // Case-insensitive string compare helper
@@ -62,7 +62,6 @@ MovieApp::MovieApp()
     nextMovieId(5000),
     isAdmin(false)
 {
-    // Nothing else needed
 }
 
 //---------------------------------------------------------------------------
@@ -446,7 +445,7 @@ void MovieApp::updateMovieDetails(int movieId,
 void MovieApp::findActorsByName(const std::string& name, List<Actor>& result) const {
     // Example: iterate all actors in the hash table
     actorTable.forEach([&](const Actor& a) -> bool {
-        if (std::strcmp(a.getName(), name.c_str()) == 0) {
+        if (caseInsensitiveCompareStrings(a.getName(), name.c_str()) == 0) {
             result.add(a);
         }
         return false; // keep going
@@ -489,7 +488,7 @@ static void mergeSortMovies(Movie* arr, int left, int right) {
 
 
 
-#include <limits> // For std::numeric_limits
+
 
 void MovieApp::displayAllMovies() const {
     if (movieTable.isEmpty()) {
@@ -680,32 +679,37 @@ void MovieApp::displayAllActors() const {
 // Display Actors by age range
 //---------------------------------------------------------------------------
 void MovieApp::displayActorsByAge(int minAge, int maxAge) const {
-    static const int MAX_ACTORS = 2000;
-    Actor* actorsInRange = new Actor[MAX_ACTORS];
+    int capacity = 100;
     int count = 0;
+    Actor* actorsInRange = new Actor[capacity];
 
     // Collect actors within the age range.
     actorTable.forEach([&](const Actor& a) -> bool {
         int age = a.getAge();
         if (age >= minAge && age <= maxAge) {
-            if (count < MAX_ACTORS) {
-                actorsInRange[count++] = a;
+            if (count >= capacity) {
+                int newCapacity = capacity * 2;
+                Actor* newArr = new Actor[newCapacity];
+                for (int i = 0; i < count; i++) {
+                    newArr[i] = actorsInRange[i];
+                }
+                delete[] actorsInRange;
+                actorsInRange = newArr;
+                capacity = newCapacity;
             }
+            actorsInRange[count++] = a;
         }
         return false; // Continue iterating
         });
 
-    // If no actors were found, display a message and exit.
     if (count == 0) {
         std::cout << "No actors found in age range [" << minAge << ", " << maxAge << "].\n";
         delete[] actorsInRange;
         return;
     }
 
-    // Sort the actors by age in ascending order.
     mergeSortActorsByAge(actorsInRange, 0, count - 1);
 
-    // Display the sorted actors.
     std::cout << "Actors in age range [" << minAge << ", " << maxAge << "] (sorted by age):\n";
     for (int i = 0; i < count; ++i) {
         std::cout << actorsInRange[i].getName() << " (Age=" << actorsInRange[i].getAge() << ")\n";
@@ -753,22 +757,29 @@ void MovieApp::displayRecentMovies() const {
     // Automatically get the current year.
     time_t now = time(0);
     struct tm localTime;
-    localtime_s(&localTime, &now);  
+    localtime_s(&localTime, &now);
     int currentYear = localTime.tm_year + 1900;
 
+    int cutoff = currentYear - 3; // Shows movies in the last 3 years
 
-    int cutoff = currentYear - 3; // this is N, so in this case, it shows the display recent movies in the last 3 years
-
-    static const int MAX_MOVIES = 2000;
-    Movie* recentMovies = new Movie[MAX_MOVIES];
+    int capacity = 100;
     int count = 0;
+    Movie* recentMovies = new Movie[capacity];
 
     // Collect movies with releaseYear >= cutoff.
     movieTable.forEach([&](const Movie& m) -> bool {
         if (m.getReleaseYear() >= cutoff) {
-            if (count < MAX_MOVIES) {
-                recentMovies[count++] = m;
+            if (count >= capacity) {
+                int newCapacity = capacity * 2;
+                Movie* newArr = new Movie[newCapacity];
+                for (int i = 0; i < count; i++) {
+                    newArr[i] = recentMovies[i];
+                }
+                delete[] recentMovies;
+                recentMovies = newArr;
+                capacity = newCapacity;
             }
+            recentMovies[count++] = m;
         }
         return false;
         });
@@ -779,10 +790,8 @@ void MovieApp::displayRecentMovies() const {
         return;
     }
 
-    // Sort the movies by release year in ascending order.
     mergeSortMoviesByYear(recentMovies, 0, count - 1);
 
-    // Display the sorted movies.
     std::cout << "Recent Movies (in ascending order of release year):\n";
     for (int i = 0; i < count; ++i) {
         std::cout << recentMovies[i].getTitle()
@@ -790,6 +799,7 @@ void MovieApp::displayRecentMovies() const {
     }
     delete[] recentMovies;
 }
+
 
 
 
@@ -803,16 +813,23 @@ void MovieApp::displayMoviesOfActor(int actorId) const {
         return;
     }
 
-    // We'll gather relevant movies into an array
-    static const int MAX_MOVIES = 2000;
-    Movie* arr = new Movie[MAX_MOVIES];
+    int capacity = 100;
     int count = 0;
+    Movie* arr = new Movie[capacity];
 
     movieTable.forEach([&](const Movie& m) -> bool {
         if (m.hasActor(actorId)) {
-            if (count < MAX_MOVIES) {
-                arr[count++] = m;
+            if (count >= capacity) {
+                int newCapacity = capacity * 2;
+                Movie* newArr = new Movie[newCapacity];
+                for (int i = 0; i < count; i++) {
+                    newArr[i] = arr[i];
+                }
+                delete[] arr;
+                arr = newArr;
+                capacity = newCapacity;
             }
+            arr[count++] = m;
         }
         return false;
         });
@@ -822,10 +839,8 @@ void MovieApp::displayMoviesOfActor(int actorId) const {
         return;
     }
 
-    // Sort the found movies by title (we can reuse mergeSortMovies)
     mergeSortMovies(arr, 0, count - 1);
 
-    // Display
     std::cout << "Movies for actor ID " << actorId << ":\n";
     for (int i = 0; i < count; ++i) {
         std::cout << " - " << arr[i].getTitle()
@@ -840,28 +855,30 @@ void MovieApp::displayMoviesOfActor(int actorId) const {
 void MovieApp::displayActorsInMovie(const std::string& movieTitle) const {
     bool foundMovie = false;
 
-    // We'll search all movies for the one with this title
     movieTable.forEach([&](const Movie& m) -> bool {
-        if (std::strcmp(m.getTitle(), movieTitle.c_str()) == 0) {
+        if (caseInsensitiveCompareStrings(m.getTitle(), movieTitle.c_str()) == 0) {
             foundMovie = true;
 
-            // Collect the cast from m.getActors() 
-            // (which is still a List<Actor>)
-            static const int MAX_ACTORS = 2000;
-            Actor* actorArr = new Actor[MAX_ACTORS];
+            int capacity = 100;
             int count = 0;
-
-            m.getActors().display([&](const Actor& a) {
-                if (count < MAX_ACTORS) {
-                    actorArr[count++] = a;
+            Actor* actorArr = new Actor[capacity];
+            m.getActors().display([&](const Actor& a) -> bool {
+                if (count >= capacity) {
+                    int newCapacity = capacity * 2;
+                    Actor* newArr = new Actor[newCapacity];
+                    for (int i = 0; i < count; i++) {
+                        newArr[i] = actorArr[i];
+                    }
+                    delete[] actorArr;
+                    actorArr = newArr;
+                    capacity = newCapacity;
                 }
+                actorArr[count++] = a;
                 return false;
                 });
 
-            // Sort by name
             mergeSortActors(actorArr, 0, count - 1);
 
-            // Display
             std::cout << "Actors in \"" << movieTitle << "\":\n";
             for (int i = 0; i < count; ++i) {
                 std::cout << " - " << actorArr[i].getName()
@@ -883,7 +900,7 @@ void MovieApp::displayActorsKnownBy(const std::string& actorName) const {
     // 1) Find the starting actor's ID by name.
     int startActorId = -1;
     actorTable.forEach([&](const Actor& a) -> bool {
-        if (std::strcmp(a.getName(), actorName.c_str()) == 0) {
+        if (caseInsensitiveCompareStrings(a.getName(), actorName.c_str()) == 0) {
             startActorId = a.getId();
             return true; // Stop iterating once found.
         }
