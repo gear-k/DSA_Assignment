@@ -1,22 +1,45 @@
 #include "HashTable.h"
 #include "Actor.h"
 #include "Movie.h"
+#include <functional>
 
-// ***** Template Definitions *****
-
-// Node constructor initializes a node with the given data and sets next to nullptr.
+/**
+ * @brief Constructs a new Node for the HashTable.
+ *
+ * Initializes the node with the provided data and sets the next pointer to nullptr.
+ *
+ * @tparam T The type of data stored in the node.
+ * @param d The data to be stored in the node.
+ */
 template <typename T>
 HashTable<T>::Node::Node(const T& d)
     : data(d), next(nullptr) {
 }
 
-// Computes the hash index for a given key using modulo operation.
+/**
+ * @brief Computes the hash index for a given key.
+ *
+ * Uses a modulo operation to compute the index, ensuring that the result
+ * is within the valid range [0, capacity-1].
+ *
+ * @tparam T The type of data stored in the hash table.
+ * @param key The key to be hashed.
+ * @return The computed hash index.
+ */
 template <typename T>
 int HashTable<T>::hashFunc(int key) const {
     return (key % capacity + capacity) % capacity;
 }
 
-// Constructor initializes the hash table with the given table size.
+/**
+ * @brief Constructs a new HashTable.
+ *
+ * Initializes the hash table with the given table size and allocates an array of
+ * buckets (pointers to Node). Each bucket is initialized to nullptr.
+ *
+ * @tparam T The type of data stored in the hash table.
+ * @param tableSize The size (capacity) of the hash table.
+ */
 template <typename T>
 HashTable<T>::HashTable(int tableSize)
     : capacity(tableSize), count(0)
@@ -27,7 +50,14 @@ HashTable<T>::HashTable(int tableSize)
     }
 }
 
-// Destructor clears the hash table and deallocates memory.
+/**
+ * @brief Destroys the HashTable.
+ *
+ * Clears the hash table, deallocating all nodes, and then deallocates the
+ * underlying bucket array.
+ *
+ * @tparam T The type of data stored in the hash table.
+ */
 template <typename T>
 HashTable<T>::~HashTable() {
     clear();
@@ -35,13 +65,21 @@ HashTable<T>::~HashTable() {
     table = nullptr;
 }
 
-// Inserts an item into the hash table.
+/**
+ * @brief Inserts an item into the hash table.
+ *
+ * If an item with the same key already exists, this function updates that item.
+ * Otherwise, it inserts a new node at the front of the bucket corresponding to the key.
+ *
+ * @tparam T The type of data stored in the hash table.
+ * @param item The item to be inserted.
+ */
 template <typename T>
 void HashTable<T>::insert(const T& item) {
     int key = getKey(item);
     int index = hashFunc(key);
 
-    // Check if an item with this key already exists and update it.
+    // Check if an item with the same key already exists and update it.
     Node* cur = table[index];
     while (cur) {
         if (getKey(cur->data) == key) {
@@ -51,14 +89,22 @@ void HashTable<T>::insert(const T& item) {
         cur = cur->next;
     }
 
-    // Insert new node at the front of the bucket.
+    // Insert new node at the beginning of the bucket.
     Node* newNode = new Node(item);
     newNode->next = table[index];
     table[index] = newNode;
     ++count;
 }
 
-// Removes an item by key from the hash table.
+/**
+ * @brief Removes an item with the specified key from the hash table.
+ *
+ * Searches for the item by key and removes it if found.
+ *
+ * @tparam T The type of data stored in the hash table.
+ * @param key The key of the item to remove.
+ * @return true if the item was found and removed; false otherwise.
+ */
 template <typename T>
 bool HashTable<T>::remove(int key) {
     int index = hashFunc(key);
@@ -67,7 +113,7 @@ bool HashTable<T>::remove(int key) {
 
     while (cur) {
         if (getKey(cur->data) == key) {
-            // If the item is found, remove it.
+            // Remove the found node.
             if (prev) {
                 prev->next = cur->next;
             }
@@ -84,7 +130,16 @@ bool HashTable<T>::remove(int key) {
     return false; // Item not found.
 }
 
-// Finds an item by key in the hash table.
+/**
+ * @brief Finds an item by key in the hash table.
+ *
+ * Searches for an item with the specified key and returns a pointer to the item
+ * if found, or nullptr if the item does not exist.
+ *
+ * @tparam T The type of data stored in the hash table.
+ * @param key The key of the item to find.
+ * @return A pointer to the found item, or nullptr if not found.
+ */
 template <typename T>
 T* HashTable<T>::find(int key) const {
     int index = hashFunc(key);
@@ -98,7 +153,13 @@ T* HashTable<T>::find(int key) const {
     return nullptr;
 }
 
-// Clears all items from the hash table.
+/**
+ * @brief Clears all items from the hash table.
+ *
+ * Deallocates all nodes in every bucket and resets the item count to zero.
+ *
+ * @tparam T The type of data stored in the hash table.
+ */
 template <typename T>
 void HashTable<T>::clear() {
     for (int i = 0; i < capacity; ++i) {
@@ -113,19 +174,37 @@ void HashTable<T>::clear() {
     count = 0;
 }
 
-// Checks if the hash table is empty.
+/**
+ * @brief Checks if the hash table is empty.
+ *
+ * @tparam T The type of data stored in the hash table.
+ * @return true if the hash table contains no items; false otherwise.
+ */
 template <typename T>
 bool HashTable<T>::isEmpty() const {
     return (count == 0);
 }
 
-// Returns the number of items currently in the hash table.
+/**
+ * @brief Returns the number of items in the hash table.
+ *
+ * @tparam T The type of data stored in the hash table.
+ * @return The number of items currently stored.
+ */
 template <typename T>
 int HashTable<T>::size() const {
     return count;
 }
 
-// Applies a function to each item in the hash table.
+/**
+ * @brief Applies a function to each item in the hash table.
+ *
+ * Iterates through all items in the hash table and calls the provided function
+ * on each item. The iteration stops if the function returns true.
+ *
+ * @tparam T The type of data stored in the hash table.
+ * @param fn A function that takes a constant reference to an item and returns a bool.
+ */
 template <typename T>
 void HashTable<T>::forEach(const std::function<bool(const T&)>& fn) const {
     for (int i = 0; i < capacity; ++i) {
@@ -139,32 +218,58 @@ void HashTable<T>::forEach(const std::function<bool(const T&)>& fn) const {
     }
 }
 
-// Retrieves the total number of items in the hash table.
+/**
+ * @brief Retrieves the total number of items in the hash table.
+ *
+ * @tparam T The type of data stored in the hash table.
+ * @return The total item count.
+ */
 template <typename T>
 int HashTable<T>::getCount() const {
     return size();
 }
 
-// Explicit template instantiations.
+// ***** Explicit Template Instantiations *****
 template class HashTable<int>;
 template class HashTable<Actor>;
 template class HashTable<Movie>;
 
-// Specialization for int key retrieval.
+// ***** Template Specializations for getKey *****
+
+/**
+ * @brief Specialization of getKey for int.
+ *
+ * Returns the integer item itself as the key.
+ *
+ * @param item The integer item.
+ * @return The key corresponding to the item.
+ */
 template <>
 int getKey<int>(const int& item) {
     return item;
 }
 
-// Specialization for Actor key retrieval (returns actor ID).
-#include "Actor.h"
+/**
+ * @brief Specialization of getKey for Actor.
+ *
+ * Returns the actor's unique ID.
+ *
+ * @param item The Actor item.
+ * @return The actor's ID.
+ */
 template <>
 int getKey<Actor>(const Actor& item) {
     return item.getId();
 }
 
-// Specialization for Movie key retrieval (returns movie ID).
-#include "Movie.h"
+/**
+ * @brief Specialization of getKey for Movie.
+ *
+ * Returns the movie's unique ID.
+ *
+ * @param item The Movie item.
+ * @return The movie's ID.
+ */
 template <>
 int getKey<Movie>(const Movie& item) {
     return item.getId();

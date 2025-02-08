@@ -18,72 +18,145 @@
  *
  ***************************************************************************/
 
+ /**
+  * @brief The Actor class represents an actor with a name, ID, birth year, age, and rating.
+  */
 class Actor {
 private:
-    char name[100];    // Fixed-size buffer for the actor's name
-    int id;            // Unique identifier for the actor
-    int birthYear;     // The actor's birth year
-    int age;           // The actor's age (usually derived from birth year)
-    int rating;        // Actor rating from 0 (no rating) to 10 (best)
+    char name[100];    ///< Fixed-size buffer for the actor's name
+    int id;            ///< Unique identifier for the actor
+    int birthYear;     ///< The actor's birth year
+    int age;           ///< The actor's age (usually derived from birth year)
+    int rating;        ///< Actor rating from 0 (no rating) to 10 (best)
 
 public:
     // --------------------------
     // Constructors
     // --------------------------
 
-    // Default constructor initializes an empty actor object
+    /**
+     * @brief Default constructor.
+     *
+     * Initializes an empty actor object.
+     */
     Actor();
 
-    // Constructor that initializes an actor with a name, birth year, and ID
+    /**
+     * @brief Constructs an Actor with a given name, birth year, and unique ID.
+     *
+     * @param nm The actor's name.
+     * @param birth The actor's birth year.
+     * @param aid The actor's unique identifier.
+     */
     Actor(const char* nm, int birth, int aid);
 
-    // Copy constructor to create a duplicate actor from an existing one
+    /**
+     * @brief Copy constructor.
+     *
+     * Creates a duplicate actor from an existing one.
+     *
+     * @param other The Actor object to copy.
+     */
     Actor(const Actor& other);
 
-    // Overloaded assignment operator to safely assign values between actors
+    /**
+     * @brief Assignment operator.
+     *
+     * Safely assigns values from one Actor to another.
+     *
+     * @param other The Actor object to assign from.
+     * @return A reference to this Actor after assignment.
+     */
     Actor& operator=(const Actor& other);
 
     // --------------------------
     // Getters and Setters
     // --------------------------
 
-    // Returns the actor's unique ID
+    /**
+     * @brief Retrieves the actor's unique ID.
+     *
+     * @return The actor's ID.
+     */
     int getId() const;
 
-    // Sets a new ID for the actor
+    /**
+     * @brief Sets a new ID for the actor.
+     *
+     * @param newId The new ID to assign.
+     */
     void setId(int newId);
 
-    // Returns the actor's name
+    /**
+     * @brief Retrieves the actor's name.
+     *
+     * @return A constant pointer to the actor's name.
+     */
     const char* getName() const;
 
-    // Updates the actor's name, ensuring it's copied safely
+    /**
+     * @brief Safely updates the actor's name.
+     *
+     * @param newName The new name to assign.
+     */
     void setName(const char* newName);
 
-    // Returns the actor's birth year
+    /**
+     * @brief Retrieves the actor's birth year.
+     *
+     * @return The actor's birth year.
+     */
     int getBirthYear() const;
 
-    // Sets a new birth year for the actor
+    /**
+     * @brief Sets a new birth year for the actor.
+     *
+     * @param newYearOfBirth The new birth year to assign.
+     */
     void setBirthYear(int newYearOfBirth);
 
-    // Returns the actor's age
+    /**
+     * @brief Retrieves the actor's age.
+     *
+     * @return The actor's age.
+     */
     int getAge() const;
 
-    // Displays all details of the actor (name, ID, birth year, age, and rating)
+    /**
+     * @brief Displays all details of the actor.
+     *
+     * Prints the actor's name, ID, birth year, age, and rating.
+     */
     void displayDetails() const;
 
     // --------------------------
     // Operators
     // --------------------------
 
-    // Overloads the equality operator to compare actors by their ID
+    /**
+     * @brief Compares this actor with another actor.
+     *
+     * Two actors are considered equal if they have the same ID.
+     *
+     * @param other The actor to compare with.
+     * @return True if both actors have the same ID, false otherwise.
+     */
     bool operator==(const Actor& other) const {
         return id == other.id;
     }
 
-    // Returns the actor's rating
+    /**
+     * @brief Retrieves the actor's rating.
+     *
+     * @return The actor's rating (expected to be between 0 and 10).
+     */
     int getRating() const { return rating; }
 
-    // Sets the actor's rating (expected to be between 0 and 10)
+    /**
+     * @brief Sets the actor's rating.
+     *
+     * @param r The new rating to assign (expected to be between 0 and 10).
+     */
     void setRating(int r) { rating = r; }
 };
 

@@ -1,21 +1,43 @@
-// MovieApp.cpp
+/***************************************************************************
+ * MovieApp.cpp
+ *
+ * Team:            Gearoid, Cedric
+ * Group:           1
+ * Student IDs:     S10241866, S10241549
+ *
+ * Features Highlight:
+ *   - CSV reading and parsing for actors, movies, and casts.
+ *   - Case-insensitive string comparisons and trimming utilities.
+ *   - Dynamic arrays and merge sort for movies and actors.
+ *   - Administrative and user operations including ratings and recommendations.
+ ***************************************************************************/
+
 #include "MovieApp.h"
 #include "ActorGraph.h"            // If you still use ActorGraph utilities
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <cstring>
-#include <cstdlib>   // atoi
-#include <ctime>     // for date-based logic (e.g., recent movies)
-#include <cassert> // for debugging purposes
-#include <limits> // For std::numeric_limits
+#include <cstdlib>     // For atoi
+#include <ctime>       // For date-based logic (e.g., recent movies)
+#include <cassert>     // For debugging purposes
+#include <limits>      // For std::numeric_limits
 
-// ---------------------------------------------------------------------------
-// Case-insensitive string compare helper
-// ---------------------------------------------------------------------------
+ // ---------------------------------------------------------------------------
+ // Helper Functions
+ // ---------------------------------------------------------------------------
+
+ /**
+  * @brief Case-insensitive comparison of two C-strings.
+  *
+  * Compares characters in a case-insensitive manner until a difference is found
+  * or both strings terminate.
+  *
+  * @param s1 First C-string.
+  * @param s2 Second C-string.
+  * @return Negative if s1 < s2, positive if s1 > s2, zero if equal.
+  */
 static int caseInsensitiveCompareStrings(const char* s1, const char* s2) {
-    // Compare characters in a case-insensitive manner
-    // until a difference is found or both strings end.
     while (*s1 && *s2) {
         unsigned char c1 = static_cast<unsigned char>(std::tolower(*s1));
         unsigned char c2 = static_cast<unsigned char>(std::tolower(*s2));
@@ -24,17 +46,19 @@ static int caseInsensitiveCompareStrings(const char* s1, const char* s2) {
         ++s1;
         ++s2;
     }
-    // If we exit the loop, then either we found a terminating null
-    // or the strings are equal up to the length of the shorter one.
-    // Compare the final characters (handles different-length strings).
     unsigned char c1 = static_cast<unsigned char>(std::tolower(*s1));
     unsigned char c2 = static_cast<unsigned char>(std::tolower(*s2));
     if (c1 < c2) return -1;
     if (c1 > c2) return 1;
-    return 0; // Fully equal
+    return 0;
 }
 
-// Helper to trim quotes/spaces
+/**
+ * @brief Trims leading/trailing quotes and spaces from a string.
+ *
+ * @param str The input string.
+ * @return The trimmed string.
+ */
 static std::string trimQuotes(const std::string& str) {
     size_t start = str.find_first_not_of(" \"");
     size_t end = str.find_last_not_of(" \"");
@@ -44,7 +68,12 @@ static std::string trimQuotes(const std::string& str) {
     return str.substr(start, end - start + 1);
 }
 
-// Helper to trim leading/trailing spaces
+/**
+ * @brief Trims leading and trailing spaces and tabs from a string.
+ *
+ * @param str The input string.
+ * @return The trimmed string.
+ */
 static std::string trim(const std::string& str) {
     size_t start = str.find_first_not_of(" \t");
     size_t end = str.find_last_not_of(" \t");
@@ -54,7 +83,16 @@ static std::string trim(const std::string& str) {
     return str.substr(start, end - start + 1);
 }
 
-// Constructor
+// ---------------------------------------------------------------------------
+// MovieApp Constructor and Admin Mode Methods
+// ---------------------------------------------------------------------------
+
+/**
+ * @brief Constructs a new MovieApp instance.
+ *
+ * Initializes the actor and movie hash tables with capacity 2000, sets the
+ * next available IDs, and defaults to user mode.
+ */
 MovieApp::MovieApp()
     : actorTable(2000),
     movieTable(2000),
@@ -64,9 +102,11 @@ MovieApp::MovieApp()
 {
 }
 
-//---------------------------------------------------------------------------
-// Admin Mode
-//---------------------------------------------------------------------------
+/**
+ * @brief Sets the application mode to admin or user.
+ *
+ * @param admin True to enable admin mode; false for user mode.
+ */
 void MovieApp::setAdminMode(bool admin) {
     isAdmin = admin;
     if (isAdmin) {
@@ -77,19 +117,27 @@ void MovieApp::setAdminMode(bool admin) {
     }
 }
 
+/**
+ * @brief Checks if the application is in admin mode.
+ *
+ * @return true if admin mode is enabled; false otherwise.
+ */
 bool MovieApp::isAdminMode() const {
     return isAdmin;
 }
 
-//---------------------------------------------------------------------------
-// CSV Reading
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// CSV Reading Methods
+// ---------------------------------------------------------------------------
 
-
-
-//---------------------------------------------------------------------
-// readActors
-//---------------------------------------------------------------------
+/**
+ * @brief Reads actor data from a CSV file.
+ *
+ * Parses each row to extract actor ID, name, and birth year, then creates
+ * Actor objects and inserts them into the actor hash table.
+ *
+ * @param filename The path to the CSV file.
+ */
 void MovieApp::readActors(const std::string& filename) {
     std::ifstream fin(filename.c_str());
     if (!fin.is_open()) {
@@ -110,12 +158,11 @@ void MovieApp::readActors(const std::string& filename) {
 
         std::stringstream ss(line);
         std::string idStr, nameStr, birthStr;
-
         std::getline(ss, idStr, ',');
         std::getline(ss, nameStr, ',');
         std::getline(ss, birthStr, ',');
 
-        // If any field is missing, skip the row.
+        // Skip malformed rows.
         if (idStr.empty() || nameStr.empty() || birthStr.empty()) {
             continue;
         }
@@ -124,11 +171,8 @@ void MovieApp::readActors(const std::string& filename) {
         int birth = std::atoi(birthStr.c_str());
         nameStr = trimQuotes(nameStr);
 
-
-
         Actor actor(nameStr.c_str(), birth, id);
         actorTable.insert(actor);
-
         if (id >= nextActorId) {
             nextActorId = id + 1;
         }
@@ -136,9 +180,14 @@ void MovieApp::readActors(const std::string& filename) {
     fin.close();
 }
 
-//---------------------------------------------------------------------
-// readMovies
-//---------------------------------------------------------------------
+/**
+ * @brief Reads movie data from a CSV file.
+ *
+ * Parses each row to extract movie ID, title, plot, and release year,
+ * creates Movie objects, and inserts them into the movie hash table.
+ *
+ * @param filename The path to the CSV file.
+ */
 void MovieApp::readMovies(const std::string& filename) {
     std::ifstream fin(filename.c_str());
     if (!fin.is_open()) {
@@ -159,13 +208,12 @@ void MovieApp::readMovies(const std::string& filename) {
 
         std::stringstream ss(line);
         std::string idStr, titleStr, plotStr, yearStr;
-
         std::getline(ss, idStr, ',');
         std::getline(ss, titleStr, ',');
         std::getline(ss, plotStr, ',');
         std::getline(ss, yearStr, ',');
 
-        // Basic validation
+        // Validate basic row structure.
         if (idStr.empty() || titleStr.empty() || plotStr.empty() || yearStr.empty()) {
             std::cerr << "[Warning] Malformed row: " << line << "\n";
             continue;
@@ -176,10 +224,8 @@ void MovieApp::readMovies(const std::string& filename) {
         titleStr = trimQuotes(titleStr);
         plotStr = trimQuotes(plotStr);
 
-        // No debug log is added here because we're focusing on the actor.
         Movie movie(titleStr.c_str(), plotStr.c_str(), year, id);
         movieTable.insert(movie);
-
         if (id >= nextMovieId) {
             nextMovieId = id + 1;
         }
@@ -187,9 +233,14 @@ void MovieApp::readMovies(const std::string& filename) {
     fin.close();
 }
 
-//---------------------------------------------------------------------
-// readCast
-//---------------------------------------------------------------------
+/**
+ * @brief Reads cast data from a CSV file.
+ *
+ * Parses each row to extract actor and movie IDs, then links actors to movies
+ * by adding the actor to the corresponding movie's cast.
+ *
+ * @param filename The path to the CSV file.
+ */
 void MovieApp::readCast(const std::string& filename) {
     std::ifstream fin(filename.c_str());
     if (!fin.is_open()) {
@@ -210,7 +261,6 @@ void MovieApp::readCast(const std::string& filename) {
 
         std::stringstream ss(line);
         std::string actorIdStr, movieIdStr;
-
         std::getline(ss, actorIdStr, ',');
         std::getline(ss, movieIdStr, ',');
 
@@ -221,12 +271,9 @@ void MovieApp::readCast(const std::string& filename) {
         int aId = std::atoi(actorIdStr.c_str());
         int mId = std::atoi(movieIdStr.c_str());
 
-        // Look up the actor and movie in the hash tables.
+        // Link the actor and movie if both exist.
         Actor* actor = actorTable.find(aId);
         Movie* movie = movieTable.find(mId);
-
-
-
         if (actor && movie) {
             movie->addActor(*actor);
         }
@@ -234,32 +281,61 @@ void MovieApp::readCast(const std::string& filename) {
     fin.close();
 }
 
+// ---------------------------------------------------------------------------
+// Next ID Accessors and ID Checks
+// ---------------------------------------------------------------------------
 
-//---------------------------------------------------------------------------
-// Next ID accessors
-//---------------------------------------------------------------------------
+/**
+ * @brief Gets the next available actor ID.
+ *
+ * @return The next actor ID.
+ */
 int MovieApp::getNextActorId() const {
     return nextActorId;
 }
 
+/**
+ * @brief Gets the next available movie ID.
+ *
+ * @return The next movie ID.
+ */
 int MovieApp::getNextMovieId() const {
     return nextMovieId;
 }
 
-//---------------------------------------------------------------------------
-// ID checks
-//---------------------------------------------------------------------------
+/**
+ * @brief Checks whether an actor ID is already used.
+ *
+ * @param id The actor ID to check.
+ * @return true if the actor ID is used; false otherwise.
+ */
 bool MovieApp::isActorIdUsed(int id) const {
     return (actorTable.find(id) != nullptr);
 }
 
+/**
+ * @brief Checks whether a movie ID is already used.
+ *
+ * @param id The movie ID to check.
+ * @return true if the movie ID is used; false otherwise.
+ */
 bool MovieApp::isMovieIdUsed(int id) const {
     return (movieTable.find(id) != nullptr);
 }
 
-//---------------------------------------------------------------------------
-// Add new Actor
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Adding and Updating Actors and Movies
+// ---------------------------------------------------------------------------
+
+/**
+ * @brief Adds a new actor to the system.
+ *
+ * Validates input, ensures a unique actor ID, creates an Actor, and inserts it
+ * into the actor hash table.
+ *
+ * @param name The name of the actor.
+ * @param birthYear The birth year of the actor.
+ */
 void MovieApp::addNewActor(const std::string& name, int birthYear) {
     if (!isAdmin) {
         std::cout << "[Error] Only administrators can add new actors.\n";
@@ -274,12 +350,10 @@ void MovieApp::addNewActor(const std::string& name, int birthYear) {
         std::cout << "[Error] Invalid birth year.\n";
         return;
     }
-
-    // Ensure unique ID
+    // Ensure a unique actor ID.
     while (isActorIdUsed(nextActorId)) {
         ++nextActorId;
     }
-
     Actor actor(trimmedName.c_str(), birthYear, nextActorId);
     actorTable.insert(actor);
     std::cout << "[Success] Added new actor: \"" << trimmedName
@@ -287,15 +361,22 @@ void MovieApp::addNewActor(const std::string& name, int birthYear) {
     ++nextActorId;
 }
 
-//---------------------------------------------------------------------------
-// Add new Movie
-//---------------------------------------------------------------------------
+/**
+ * @brief Adds a new movie to the system.
+ *
+ * Validates input, ensures a unique movie ID, creates a Movie, and inserts it
+ * into the movie hash table.
+ *
+ * @param title The title of the movie.
+ * @param plot The plot of the movie.
+ * @param releaseYear The release year of the movie.
+ */
 void MovieApp::addNewMovie(const std::string& title, const std::string& plot, int releaseYear) {
     if (!isAdmin) {
         std::cout << "[Error] Only administrators can add new movies.\n";
         return;
     }
-    std::string trimmedTitle = trimQuotes(title); // Use trimQuotes instead of trim
+    std::string trimmedTitle = trimQuotes(title);
     if (trimmedTitle.empty()) {
         std::cout << "[Error] Movie title cannot be empty.\n";
         return;
@@ -304,11 +385,9 @@ void MovieApp::addNewMovie(const std::string& title, const std::string& plot, in
         std::cout << "[Error] Invalid release year.\n";
         return;
     }
-
     while (isMovieIdUsed(nextMovieId)) {
         ++nextMovieId;
     }
-
     Movie movie(trimmedTitle.c_str(), plot.c_str(), releaseYear, nextMovieId);
     movieTable.insert(movie);
     std::cout << "[Success] Added new movie: \"" << trimmedTitle
@@ -316,17 +395,21 @@ void MovieApp::addNewMovie(const std::string& title, const std::string& plot, in
     ++nextMovieId;
 }
 
-
-
-//---------------------------------------------------------------------------
-// Link actor to movie
-//---------------------------------------------------------------------------
+/**
+ * @brief Links an actor to a movie using their IDs.
+ *
+ * Looks up the actor and movie in their respective hash tables and adds the actor
+ * to the movie's cast.
+ *
+ * @param actorId The actor's ID.
+ * @param movieId The movie's ID.
+ * @param isAdmin Flag indicating whether the operation is performed in admin mode.
+ */
 void MovieApp::addActorToMovieById(int actorId, int movieId, bool isAdmin) {
     if (!isAdmin) {
         std::cout << "[Error] Only administrators can add actors to movies.\n";
         return;
     }
-
     Actor* actor = actorTable.find(actorId);
     if (!actor) {
         std::cout << "[Error] Actor ID " << actorId << " not found.\n";
@@ -337,29 +420,31 @@ void MovieApp::addActorToMovieById(int actorId, int movieId, bool isAdmin) {
         std::cout << "[Error] Movie ID " << movieId << " not found.\n";
         return;
     }
-
     movie->addActor(*actor);
     std::cout << "[Success] Actor \"" << actor->getName()
         << "\" added to movie \"" << movie->getTitle() << "\"\n";
 }
 
-//---------------------------------------------------------------------------
-// Update actor details
-//---------------------------------------------------------------------------
+/**
+ * @brief Updates an actor's details.
+ *
+ * Looks up the actor by ID, validates the new details, and updates the actor in
+ * both the actor table and in all movies containing that actor.
+ *
+ * @param actorId The actor's ID.
+ * @param newName The new name.
+ * @param newYearOfBirth The new birth year.
+ */
 void MovieApp::updateActorDetails(int actorId, const std::string& newName, int newYearOfBirth) {
     if (!isAdmin) {
         std::cout << "[Error] Only administrators can update actor details.\n";
         return;
     }
-
-    // Look up the Actor in the HashTable
     Actor* actor = actorTable.find(actorId);
     if (!actor) {
         std::cout << "[Error] Actor ID " << actorId << " not found.\n";
         return;
     }
-
-    // Validate inputs
     std::string trimmedName = trim(newName);
     if (trimmedName.empty()) {
         std::cout << "[Error] Actor name cannot be empty.\n";
@@ -369,42 +454,40 @@ void MovieApp::updateActorDetails(int actorId, const std::string& newName, int n
         std::cout << "[Error] Invalid year of birth.\n";
         return;
     }
-
-    // 1) Update the Actor in the HashTable
+    // Update the actor in the hash table.
     actor->setName(trimmedName.c_str());
     actor->setBirthYear(newYearOfBirth);
     actorTable.insert(*actor);
 
-    // 2) Also update all copies of this actor in every Movie
+    // Update actor details in all movies.
     movieTable.forEach([&](const Movie& movieRef) -> bool {
-        // movieRef is const, so we cast away const
         Movie& movie = const_cast<Movie&>(movieRef);
-
-        // If this movie has the actor in question...
         if (movie.hasActor(actorId)) {
-            // Now update the copy in the movie's actor list
-            // movie.getActors().display(...) also gives a const Actor&, so we do another const_cast
             movie.getActors().display([&](const Actor& castActor) -> bool {
                 Actor& mutableActor = const_cast<Actor&>(castActor);
                 if (mutableActor.getId() == actorId) {
                     mutableActor.setName(trimmedName.c_str());
                     mutableActor.setBirthYear(newYearOfBirth);
-                    // If you want to sync ratings too, you can do mutableActor.setRating(actor->getRating());
                 }
-                return false; // keep iterating
+                return false; // Continue iteration.
                 });
         }
-        return false; // keep iterating over all movies
+        return false;
         });
-
     std::cout << "[Success] Updated Actor ID " << actorId << "\n";
 }
 
-
-
-//---------------------------------------------------------------------------
-// Update movie details
-//---------------------------------------------------------------------------
+/**
+ * @brief Updates a movie's details.
+ *
+ * Looks up the movie by ID, validates the new details, and updates the movie
+ * in the movie table.
+ *
+ * @param movieId The movie's ID.
+ * @param newTitle The new title.
+ * @param newPlot The new plot.
+ * @param newReleaseYear The new release year.
+ */
 void MovieApp::updateMovieDetails(int movieId,
     const std::string& newTitle,
     const std::string& newPlot,
@@ -413,15 +496,12 @@ void MovieApp::updateMovieDetails(int movieId,
         std::cout << "[Error] Only administrators can update movie details.\n";
         return;
     }
-
     Movie* movie = movieTable.find(movieId);
     if (!movie) {
         std::cout << "[Error] Movie ID " << movieId << " not found.\n";
         return;
     }
-
-    std::string trimmedTitle = trimQuotes(newTitle); // Use trimQuotes
-
+    std::string trimmedTitle = trimQuotes(newTitle);
     if (trimmedTitle.empty()) {
         std::cout << "[Error] Movie title cannot be empty.\n";
         return;
@@ -433,40 +513,48 @@ void MovieApp::updateMovieDetails(int movieId,
     movie->setTitle(trimmedTitle.c_str());
     movie->setPlot(newPlot.c_str());
     movie->setReleaseYear(newReleaseYear);
-
     movieTable.insert(*movie);
     std::cout << "[Success] Updated Movie ID " << movieId << "\n";
 }
 
-
-//---------------------------------------------------------------------------
-// findActorsByName
-//---------------------------------------------------------------------------
+/**
+ * @brief Finds actors by name.
+ *
+ * Iterates over all actors in the actor table and adds those that match the
+ * provided name (case-insensitive) to the result list.
+ *
+ * @param name The actor name to search for.
+ * @param result The list to populate with matching actors.
+ */
 void MovieApp::findActorsByName(const std::string& name, List<Actor>& result) const {
-    // Example: iterate all actors in the hash table
     actorTable.forEach([&](const Actor& a) -> bool {
         if (caseInsensitiveCompareStrings(a.getName(), name.c_str()) == 0) {
             result.add(a);
         }
-        return false; // keep going
+        return false; // Continue iterating.
         });
 }
 
-//---------------------------------------------------------------------------
-// Display All Movies (alphabetical by title)
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Display Methods with Sorting and Pagination
+// ---------------------------------------------------------------------------
+
+/**
+ * @brief Merge sort helper for sorting Movie objects alphabetically by title.
+ *
+ * @param arr The array of Movie objects.
+ * @param left The left index.
+ * @param right The right index.
+ */
 static void mergeSortMovies(Movie* arr, int left, int right) {
     if (left >= right) return;
     int mid = (left + right) / 2;
     mergeSortMovies(arr, left, mid);
     mergeSortMovies(arr, mid + 1, right);
-
     int size = right - left + 1;
-    Movie* temp = new Movie[size]();
+    Movie* temp = new Movie[size];
     int i = left, j = mid + 1, k = 0;
-
     while (i <= mid && j <= right) {
-        // Use caseInsensitiveCompareStrings for a case-insensitive comparison of titles.
         if (caseInsensitiveCompareStrings(arr[i].getTitle(), arr[j].getTitle()) <= 0) {
             temp[k++] = arr[i++];
         }
@@ -486,24 +574,17 @@ static void mergeSortMovies(Movie* arr, int left, int right) {
     delete[] temp;
 }
 
-
-
-
-
+/**
+ * @brief Displays all movies sorted alphabetically by title with pagination.
+ */
 void MovieApp::displayAllMovies() const {
     if (movieTable.isEmpty()) {
         std::cout << "No movies found.\n";
         return;
     }
-
-    // Start with a small initial capacity.
-    int capacity = 100;
-    int count = 0;
+    int capacity = 100, count = 0;
     Movie* arr = new Movie[capacity];
-
-    // Collect movies into the dynamic array.
     movieTable.forEach([&](const Movie& m) -> bool {
-        // If we've reached capacity, double the array size.
         if (count >= capacity) {
             int newCapacity = capacity * 2;
             Movie* newArr = new Movie[newCapacity];
@@ -515,28 +596,20 @@ void MovieApp::displayAllMovies() const {
             capacity = newCapacity;
         }
         arr[count++] = m;
-        return false; // continue iterating
+        return false;
         });
-
     if (count == 0) {
         std::cout << "No movies found.\n";
         delete[] arr;
         return;
     }
-
-    // Sort the movies alphabetically by title.
     mergeSortMovies(arr, 0, count - 1);
-
-    // Display the movies with pagination.
     std::cout << "All Movies (alphabetical):\n";
-    const int pageSize = 8000; // Number of movies per page.
+    const int pageSize = 8000; // Movies per page.
     int linesPrinted = 0;
-
     for (int i = 0; i < count; i++) {
         arr[i].displayDetails();
         linesPrinted++;
-
-        // If we've printed pageSize movies and there are more to show, pause.
         if (linesPrinted % pageSize == 0 && i < count - 1) {
             std::cout << "\n-- Press Enter to continue --";
             std::cout.flush();
@@ -544,22 +617,24 @@ void MovieApp::displayAllMovies() const {
             std::cout << "\n";
         }
     }
-
     delete[] arr;
 }
 
-
-// Merge sort for Actor objects sorted by age (ascending) NEW METHOD
+/**
+ * @brief Merge sort helper for sorting Actor objects by age in ascending order.
+ *
+ * @param arr The array of Actor objects.
+ * @param left The left index.
+ * @param right The right index.
+ */
 static void mergeSortActorsByAge(Actor* arr, int left, int right) {
     if (left >= right) return;
     int mid = (left + right) / 2;
     mergeSortActorsByAge(arr, left, mid);
     mergeSortActorsByAge(arr, mid + 1, right);
-
     int size = right - left + 1;
     Actor* temp = new Actor[size];
     int i = left, j = mid + 1, k = 0;
-
     while (i <= mid && j <= right) {
         if (arr[i].getAge() <= arr[j].getAge()) {
             temp[k++] = arr[i++];
@@ -580,22 +655,22 @@ static void mergeSortActorsByAge(Actor* arr, int left, int right) {
     delete[] temp;
 }
 
-
-//---------------------------------------------------------------------------
-// Display All Actors (alphabetical by name)
-//---------------------------------------------------------------------------
+/**
+ * @brief Merge sort helper for sorting Actor objects alphabetically by name.
+ *
+ * @param arr The array of Actor objects.
+ * @param left The left index.
+ * @param right The right index.
+ */
 static void mergeSortActors(Actor* arr, int left, int right) {
     if (left >= right) return;
     int mid = (left + right) / 2;
     mergeSortActors(arr, left, mid);
     mergeSortActors(arr, mid + 1, right);
-
     int size = right - left + 1;
-    Actor* temp = new Actor[size]();
+    Actor* temp = new Actor[size];
     int i = left, j = mid + 1, k = 0;
-
     while (i <= mid && j <= right) {
-        // Case-insensitive compare
         if (caseInsensitiveCompareStrings(arr[i].getName(), arr[j].getName()) <= 0) {
             temp[k++] = arr[i++];
         }
@@ -615,18 +690,16 @@ static void mergeSortActors(Actor* arr, int left, int right) {
     delete[] temp;
 }
 
+/**
+ * @brief Displays all actors sorted alphabetically by name with pagination.
+ */
 void MovieApp::displayAllActors() const {
     if (actorTable.isEmpty()) {
         std::cout << "No actors found.\n";
         return;
     }
-
-    // Start with an initial capacity for the dynamic array.
-    int capacity = 100;
-    int count = 0;
+    int capacity = 100, count = 0;
     Actor* arr = new Actor[capacity];
-
-    // Collect actors dynamically.
     actorTable.forEach([&](const Actor& a) -> bool {
         if (count >= capacity) {
             int newCapacity = capacity * 2;
@@ -639,51 +712,39 @@ void MovieApp::displayAllActors() const {
             capacity = newCapacity;
         }
         arr[count++] = a;
-        return false; // Continue iterating.
+        return false;
         });
-
     if (count == 0) {
         std::cout << "No actors found.\n";
         delete[] arr;
         return;
     }
-
-    // Sort the actors alphabetically by name.
     mergeSortActors(arr, 0, count - 1);
-
-    // Display with pagination.
-    const int pageSize = 8000; // Number of actors per page.
-    int linesPrinted = 0;
-
     std::cout << "All Actors (alphabetical):\n";
+    const int pageSize = 8000;
+    int linesPrinted = 0;
     for (int i = 0; i < count; i++) {
         arr[i].displayDetails();
         linesPrinted++;
-
-        // When we've printed a page and there are more lines, pause for input.
         if (linesPrinted % pageSize == 0 && i < count - 1) {
             std::cout << "\n-- Press Enter to continue --";
-            // Flush the output before waiting.
             std::cout.flush();
-            // Wait for the user to hit Enter.
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             std::cout << "\n";
         }
     }
-
     delete[] arr;
 }
 
-
-//---------------------------------------------------------------------------
-// Display Actors by age range
-//---------------------------------------------------------------------------
+/**
+ * @brief Displays actors whose ages fall within a given range, sorted by age.
+ *
+ * @param minAge The minimum age.
+ * @param maxAge The maximum age.
+ */
 void MovieApp::displayActorsByAge(int minAge, int maxAge) const {
-    int capacity = 100;
-    int count = 0;
+    int capacity = 100, count = 0;
     Actor* actorsInRange = new Actor[capacity];
-
-    // Collect actors within the age range.
     actorTable.forEach([&](const Actor& a) -> bool {
         int age = a.getAge();
         if (age >= minAge && age <= maxAge) {
@@ -699,17 +760,14 @@ void MovieApp::displayActorsByAge(int minAge, int maxAge) const {
             }
             actorsInRange[count++] = a;
         }
-        return false; // Continue iterating
+        return false;
         });
-
     if (count == 0) {
         std::cout << "No actors found in age range [" << minAge << ", " << maxAge << "].\n";
         delete[] actorsInRange;
         return;
     }
-
     mergeSortActorsByAge(actorsInRange, 0, count - 1);
-
     std::cout << "Actors in age range [" << minAge << ", " << maxAge << "] (sorted by age):\n";
     for (int i = 0; i < count; ++i) {
         std::cout << actorsInRange[i].getName() << " (Age=" << actorsInRange[i].getAge() << ")\n";
@@ -717,18 +775,21 @@ void MovieApp::displayActorsByAge(int minAge, int maxAge) const {
     delete[] actorsInRange;
 }
 
-
-// Merge sort for Movie objects sorted by release year (ascending)
+/**
+ * @brief Merge sort helper for sorting Movie objects by release year.
+ *
+ * @param arr The array of Movie objects.
+ * @param left The left index.
+ * @param right The right index.
+ */
 static void mergeSortMoviesByYear(Movie* arr, int left, int right) {
     if (left >= right) return;
     int mid = (left + right) / 2;
     mergeSortMoviesByYear(arr, left, mid);
     mergeSortMoviesByYear(arr, mid + 1, right);
-
     int size = right - left + 1;
-    Movie* temp = new Movie[size]; // dynamically allocated temporary array
+    Movie* temp = new Movie[size];
     int i = left, j = mid + 1, k = 0;
-
     while (i <= mid && j <= right) {
         if (arr[i].getReleaseYear() <= arr[j].getReleaseYear()) {
             temp[k++] = arr[i++];
@@ -749,24 +810,17 @@ static void mergeSortMoviesByYear(Movie* arr, int left, int right) {
     delete[] temp;
 }
 
-
-//---------------------------------------------------------------------------
-// Display recent movies (released in last ~N years)
-//---------------------------------------------------------------------------
+/**
+ * @brief Displays recent movies (released within the last 3 years) sorted by release year.
+ */
 void MovieApp::displayRecentMovies() const {
-    // Automatically get the current year.
     time_t now = time(0);
     struct tm localTime;
     localtime_s(&localTime, &now);
     int currentYear = localTime.tm_year + 1900;
-
-    int cutoff = currentYear - 3; // Shows movies in the last 3 years
-
-    int capacity = 100;
-    int count = 0;
+    int cutoff = currentYear - 3;
+    int capacity = 100, count = 0;
     Movie* recentMovies = new Movie[capacity];
-
-    // Collect movies with releaseYear >= cutoff.
     movieTable.forEach([&](const Movie& m) -> bool {
         if (m.getReleaseYear() >= cutoff) {
             if (count >= capacity) {
@@ -783,15 +837,12 @@ void MovieApp::displayRecentMovies() const {
         }
         return false;
         });
-
     if (count == 0) {
         std::cout << "No movies found in the last 3 years.\n";
         delete[] recentMovies;
         return;
     }
-
     mergeSortMoviesByYear(recentMovies, 0, count - 1);
-
     std::cout << "Recent Movies (in ascending order of release year):\n";
     for (int i = 0; i < count; ++i) {
         std::cout << recentMovies[i].getTitle()
@@ -800,23 +851,22 @@ void MovieApp::displayRecentMovies() const {
     delete[] recentMovies;
 }
 
-
-
-
-//---------------------------------------------------------------------------
-// Display movies of an actor
-//---------------------------------------------------------------------------
+/**
+ * @brief Displays movies featuring a given actor.
+ *
+ * Searches for movies in which the actor (identified by actorId) appears, sorts
+ * them alphabetically by title, and displays the results.
+ *
+ * @param actorId The actor's ID.
+ */
 void MovieApp::displayMoviesOfActor(int actorId) const {
     Actor* actPtr = actorTable.find(actorId);
     if (!actPtr) {
         std::cout << "Actor ID " << actorId << " not found.\n";
         return;
     }
-
-    int capacity = 100;
-    int count = 0;
+    int capacity = 100, count = 0;
     Movie* arr = new Movie[capacity];
-
     movieTable.forEach([&](const Movie& m) -> bool {
         if (m.hasActor(actorId)) {
             if (count >= capacity) {
@@ -838,9 +888,7 @@ void MovieApp::displayMoviesOfActor(int actorId) const {
         delete[] arr;
         return;
     }
-
     mergeSortMovies(arr, 0, count - 1);
-
     std::cout << "Movies for actor ID " << actorId << ":\n";
     for (int i = 0; i < count; ++i) {
         std::cout << " - " << arr[i].getTitle()
@@ -849,18 +897,20 @@ void MovieApp::displayMoviesOfActor(int actorId) const {
     delete[] arr;
 }
 
-//---------------------------------------------------------------------------
-// Display actors in a given movie (by title)
-//---------------------------------------------------------------------------
+/**
+ * @brief Displays actors in a movie specified by title.
+ *
+ * Searches for a movie with a matching title (case-insensitive), sorts its cast
+ * alphabetically by name, and displays the actor names and ages.
+ *
+ * @param movieTitle The title of the movie.
+ */
 void MovieApp::displayActorsInMovie(const std::string& movieTitle) const {
     bool foundMovie = false;
-
     movieTable.forEach([&](const Movie& m) -> bool {
         if (caseInsensitiveCompareStrings(m.getTitle(), movieTitle.c_str()) == 0) {
             foundMovie = true;
-
-            int capacity = 100;
-            int count = 0;
+            int capacity = 100, count = 0;
             Actor* actorArr = new Actor[capacity];
             m.getActors().display([&](const Actor& a) -> bool {
                 if (count >= capacity) {
@@ -876,53 +926,47 @@ void MovieApp::displayActorsInMovie(const std::string& movieTitle) const {
                 actorArr[count++] = a;
                 return false;
                 });
-
             mergeSortActors(actorArr, 0, count - 1);
-
             std::cout << "Actors in \"" << movieTitle << "\":\n";
             for (int i = 0; i < count; ++i) {
                 std::cout << " - " << actorArr[i].getName()
                     << " (Age: " << actorArr[i].getAge() << ")\n";
             }
             delete[] actorArr;
-            return true; // Stop iteration after we find the matching movie
+            return true; // Stop iteration after matching movie is found.
         }
         return false;
         });
-
     if (!foundMovie) {
         std::cout << "Movie \"" << movieTitle << "\" not found.\n";
     }
 }
 
-
+/**
+ * @brief Displays actors known by a given actor (up to 2 levels).
+ *
+ * Finds the actor by name, builds the actor graph, and uses breadth-first search
+ * to determine which actors are connected within 2 levels.
+ *
+ * @param actorName The name of the starting actor.
+ */
 void MovieApp::displayActorsKnownBy(const std::string& actorName) const {
-    // 1) Find the starting actor's ID by name.
     int startActorId = -1;
     actorTable.forEach([&](const Actor& a) -> bool {
         if (caseInsensitiveCompareStrings(a.getName(), actorName.c_str()) == 0) {
             startActorId = a.getId();
-            return true; // Stop iterating once found.
+            return true; // Stop once found.
         }
         return false;
         });
-
-    // If not found, display error and stop.
     if (startActorId == -1) {
         std::cout << "[Error] Actor \"" << actorName << "\" not found.\n";
         return;
     }
-
-    // 2) Prepare structures to build the adjacency lists dynamically.
-    int* actorIds = nullptr;               // Will be allocated dynamically.
-    List<int>* adjacencyLists = nullptr;   // Will be allocated dynamically.
+    int* actorIds = nullptr;
+    List<int>* adjacencyLists = nullptr;
     int totalActors = 0;
-
-    // 3) Build the actor graph using ActorGraph's updated method.
-    //    This function allocates and grows the actorIds and adjacencyLists arrays as needed.
     ActorGraph::buildActorGraph(actorTable, movieTable, actorIds, totalActors, adjacencyLists);
-
-    // 4) Find the start index in actorIds.
     int startIndex = ActorGraph::findActorIndexInArray(startActorId, actorIds, totalActors);
     if (startIndex == -1) {
         std::cout << "[Error] Could not map actor to index.\n";
@@ -930,44 +974,40 @@ void MovieApp::displayActorsKnownBy(const std::string& actorName) const {
         delete[] actorIds;
         return;
     }
-
-    // 5) Use ActorGraph's BFS to find connected actors up to depth = 2.
-    //    Note that the updated function takes the totalActors count as an extra parameter.
     List<int> discovered = ActorGraph::findConnectedActors(startIndex, adjacencyLists, totalActors, 2);
-
-
     if (discovered.isEmpty()) {
         std::cout << "No actors found that \"" << actorName << "\" knows (up to 2 levels).\n";
         delete[] adjacencyLists;
         delete[] actorIds;
         return;
     }
-
-    // 6) Display the results.
     std::cout << "Actors known by \"" << actorName << "\" (up to 2 levels):\n";
     discovered.display([&](int idx) {
-        // idx is an index into actorIds[], so we retrieve the actual actorId.
-        if (idx < 0 || idx >= totalActors) return false;  // Safety check.
+        if (idx < 0 || idx >= totalActors) return false;
         int realActorId = actorIds[idx];
-
-        // Look up the Actor* in the actorTable.
         Actor* aPtr = actorTable.find(realActorId);
         if (aPtr) {
             std::cout << " - " << aPtr->getName() << "\n";
         }
-        return false; // Continue iteration.
+        return false;
         });
-
-    // Clean up the dynamically allocated arrays.
     delete[] adjacencyLists;
     delete[] actorIds;
 }
 
+// ---------------------------------------------------------------------------
+// Rating and Recommendation Methods
+// ---------------------------------------------------------------------------
 
-
-//---------------------------------------------------------------------------
-// Ratings
-//---------------------------------------------------------------------------
+/**
+ * @brief Sets the rating for an actor.
+ *
+ * Validates the rating value, updates the actor's rating, and re-inserts the
+ * updated actor into the hash table.
+ *
+ * @param actorId The actor's ID.
+ * @param rating The new rating (1-10).
+ */
 void MovieApp::setActorRating(int actorId, int rating) {
     if (rating < 1 || rating > 10) {
         std::cout << "[Error] Invalid rating. Must be between 1 and 10.\n";
@@ -980,11 +1020,19 @@ void MovieApp::setActorRating(int actorId, int rating) {
     }
     a->setRating(rating);
     actorRatings.insert(*a);
-    // Re-insert to update in the HashTable
     actorTable.insert(*a);
     std::cout << "[Success] Actor (ID=" << actorId << ") rating updated to " << rating << "\n";
 }
 
+/**
+ * @brief Sets the rating for a movie.
+ *
+ * Validates the rating value, updates the movie's rating, and re-inserts the
+ * updated movie into the hash table.
+ *
+ * @param movieId The movie's ID.
+ * @param rating The new rating (1-10).
+ */
 void MovieApp::setMovieRating(int movieId, int rating) {
     if (rating < 1 || rating > 10) {
         std::cout << "[Error] Invalid rating. Must be between 1 and 10.\n";
@@ -1001,29 +1049,31 @@ void MovieApp::setMovieRating(int movieId, int rating) {
     std::cout << "[Success] Movie (ID=" << movieId << ") rating updated to " << rating << "\n";
 }
 
+/**
+ * @brief Recommends movies within a specified rating range.
+ *
+ * Displays movies from the movieRatings hash table that have ratings between
+ * minRating and maxRating.
+ *
+ * @param minRating The minimum rating.
+ * @param maxRating The maximum rating.
+ */
 void MovieApp::recommendMoviesByRating(int minRating, int maxRating) const {
     std::cout << "Movies with rating between " << minRating << " and " << maxRating << ":\n";
     movieRatings.displayMoviesInRange(minRating, maxRating);
 }
 
+/**
+ * @brief Recommends actors within a specified rating range.
+ *
+ * Displays actors from the actorRatings hash table that have ratings between
+ * minRating and maxRating.
+ *
+ * @param minRating The minimum rating.
+ * @param maxRating The maximum rating.
+ */
 void MovieApp::recommendActorsByRating(int minRating, int maxRating) const {
     std::cout << "Actors with rating between " << minRating << " and " << maxRating << ":\n";
     actorRatings.displayActorsInRange(minRating, maxRating);
 }
-
-// Helper function to print test headers
-static void printTestHeader(const std::string& testName) {
-    std::cout << "\n--- " << testName << " ---\n";
-}
-
-// Helper function to print test results
-static void printTestResult(const std::string& testName, bool passed, const std::string& details = "") {
-    if (passed) {
-        std::cout << "[PASS] " << testName << "\n";
-    }
-    else {
-        std::cout << "[FAIL] " << testName << " - " << details << "\n";
-    }
-}
-
 

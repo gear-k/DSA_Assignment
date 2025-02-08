@@ -17,7 +17,12 @@
 #include <string>
 #include <cctype>
 
- // Removes leading and trailing whitespace from a string.
+ /**
+  * @brief Removes leading and trailing whitespace from a string.
+  *
+  * @param str The input string to trim.
+  * @return A new string with leading and trailing whitespace removed.
+  */
 static std::string trim(const std::string& str) {
     size_t start = str.find_first_not_of(" \t\r\n");
     size_t end = str.find_last_not_of(" \t\r\n");
@@ -27,8 +32,18 @@ static std::string trim(const std::string& str) {
     return str.substr(start, end - start + 1);
 }
 
-// Prompts the user for an integer within a specified range.
-// If allowCancel is true, entering 0 cancels the prompt.
+/**
+ * @brief Prompts the user for an integer within a specified range.
+ *
+ * Loops until the user enters a valid integer within the range [minVal, maxVal].
+ * If cancellation is allowed and the user enters 0, the prompt is cancelled.
+ *
+ * @param prompt The prompt message to display.
+ * @param minVal The minimum acceptable value.
+ * @param maxVal The maximum acceptable value.
+ * @param allowCancel Whether cancellation is allowed (default: true).
+ * @return The valid integer entered by the user, or 0 if cancelled.
+ */
 int promptForInt(const std::string& prompt, int minVal, int maxVal, bool allowCancel = true) {
     while (true) {
         std::cout << prompt;
@@ -37,31 +52,38 @@ int promptForInt(const std::string& prompt, int minVal, int maxVal, bool allowCa
         std::cin >> value;
 
         if (std::cin.fail()) {
-            // Non-integer entered
+            // Non-integer entered.
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             std::cout << "[Error] Please enter a valid integer.\n";
             continue;
         }
-        // If user enters 0 and cancellation is allowed, return 0
+        // Check for cancellation.
         if (allowCancel && value == 0) {
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             return 0;
         }
-        // Check range
+        // Validate the range.
         if (value < minVal || value > maxVal) {
             std::cout << "[Error] Value out of allowed range (" << minVal << " - " << maxVal << ").\n";
             continue;
         }
-
-        // Clear leftover input and return the valid value
+        // Clear leftover input and return the valid value.
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         return value;
     }
 }
 
-// Prompts the user for a non-empty string.
-// If allowCancel is true and the user types "exit", an empty string is returned to signal cancellation.
+/**
+ * @brief Prompts the user for a non-empty string.
+ *
+ * Loops until the user enters a non-empty string. If cancellation is allowed,
+ * typing "exit" returns an empty string to signal cancellation.
+ *
+ * @param prompt The prompt message to display.
+ * @param allowCancel Whether cancellation is allowed (default: true).
+ * @return The non-empty string entered by the user, or an empty string if cancelled.
+ */
 std::string promptForString(const std::string& prompt, bool allowCancel = true) {
     while (true) {
         std::cout << prompt;
@@ -70,7 +92,7 @@ std::string promptForString(const std::string& prompt, bool allowCancel = true) 
 
         input = trim(input);
         if (allowCancel && input == "exit") {
-            return "";  // Signal cancellation
+            return "";  // Signal cancellation.
         }
         if (input.empty()) {
             std::cout << "[Error] Input cannot be empty.\n";
@@ -80,7 +102,13 @@ std::string promptForString(const std::string& prompt, bool allowCancel = true) 
     }
 }
 
-// Displays the main menu based on the current mode (admin or user).
+/**
+ * @brief Displays the main menu based on the current mode (admin or user).
+ *
+ * Outputs the list of available options to the console.
+ *
+ * @param isAdmin True if the system is in admin mode; false for user mode.
+ */
 void displayMenu(bool isAdmin) {
     std::cout << "\n========== Movie Management System ==========\n";
     if (isAdmin) {
@@ -110,7 +138,14 @@ void displayMenu(bool isAdmin) {
     std::cout << "Enter your choice: ";
 }
 
-// Main function to run the Movie Management System.
+/**
+ * @brief Main function to run the Movie Management System.
+ *
+ * Initializes the application, loads data from CSV files, sets the mode (admin/user),
+ * and continuously displays the menu to handle user inputs until exit.
+ *
+ * @return Exit status of the application.
+ */
 int main() {
     MovieApp app;
     std::cout << "Loading data from CSV files...\n";
@@ -145,11 +180,11 @@ int main() {
 
     int choice;
     do {
-        // Display the appropriate menu based on the current mode
+        // Display the appropriate menu based on the current mode.
         displayMenu(app.isAdminMode());
         std::cin >> choice;
 
-        // Handle non-integer input
+        // Handle non-integer input.
         if (std::cin.fail()) {
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -159,7 +194,7 @@ int main() {
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
         if (app.isAdminMode()) {
-            // Admin-specific options
+            // Admin-specific options.
             switch (choice) {
             case 1: {
                 std::string name = promptForString("Enter actor name (type 'exit' to cancel): ");
@@ -259,12 +294,8 @@ int main() {
                 app.updateMovieDetails(movieId, newTitle, newPlot, newYear);
                 break;
             }
-            //case 14:
-            //    std::cout << "[Admin] Running all tests...\n";
-            //    app.runAllTests();
-            //    break;
             case 19: {
-                // Switch from ADMIN mode -> USER mode
+                // Toggle from ADMIN mode to USER mode.
                 app.setAdminMode(false);
                 std::cout << "[Switched to USER mode]\n";
                 break;
@@ -278,7 +309,7 @@ int main() {
             }
         }
         else {
-            // User-specific options
+            // User-specific options.
             switch (choice) {
             case 6:
                 app.displayAllActors();
@@ -304,22 +335,18 @@ int main() {
                 app.displayRecentMovies();
                 break;
             case 10: {
-                // Prompt for (partial) actor name
                 std::string inputName = promptForString("Enter actor name (type 'exit' to cancel): ");
                 if (inputName.empty()) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
                 }
-
-                // Collect all matching actors
                 List<Actor> matchedActors;
                 app.findActorsByName(inputName, matchedActors);
 
-                // Count the number of matches
                 int matchCount = 0;
                 matchedActors.display([&](const Actor& a) {
                     matchCount++;
-                    return false; // Continue iterating
+                    return false;
                     });
 
                 if (matchCount == 0) {
@@ -327,69 +354,51 @@ int main() {
                     break;
                 }
                 else if (matchCount == 1) {
-                    // Retrieve the actor's ID if exactly one match is found
                     int actorId = 0;
                     matchedActors.display([&](const Actor& a) {
                         actorId = a.getId();
-                        return true; // Stop after first match
+                        return true;
                         });
                     app.displayMoviesOfActor(actorId);
                 }
                 else {
-                    // Multiple actors found with the same name
                     std::cout << "[Info] Multiple actors found with the name \"" << inputName << "\":\n";
-
                     static const int MAX_ACTORS = 50;
                     Actor actorArray[MAX_ACTORS];
                     int idx = 0;
-
-                    // Store matched actors into an array for later reference
                     matchedActors.display([&](const Actor& a) {
                         if (idx < MAX_ACTORS) {
                             actorArray[idx++] = a;
                         }
                         return false;
                         });
-
-                    // Display each matched actor's details
                     for (int i = 0; i < idx; i++) {
                         std::cout << "  ID=" << actorArray[i].getId()
                             << ", Name=" << actorArray[i].getName()
                             << ", BirthYear=" << actorArray[i].getBirthYear()
-                            << ", Rating=" << actorArray[i].getRating()
-                            << "\n";
+                            << ", Rating=" << actorArray[i].getRating() << "\n";
                     }
-
-                    // Prompt the user to select the correct actor ID
                     int chosenId = promptForInt("Enter the correct Actor ID (or '0' to cancel): ", 1, 999999999, true);
                     if (chosenId == 0) {
                         std::cout << "[Cancelled] Returning to main menu.\n";
                         break;
                     }
-
-                    // Validate the chosen ID
                     bool found = false;
-                    std::string finalActorName;
                     for (int i = 0; i < idx; i++) {
                         if (actorArray[i].getId() == chosenId) {
-                            finalActorName = actorArray[i].getName();
                             found = true;
                             break;
                         }
                     }
-
                     if (!found) {
                         std::cout << "[Error] Invalid Actor ID selected. Returning to main menu.\n";
                         break;
                     }
-
-                    // Display movies of the chosen actor
                     app.displayMoviesOfActor(chosenId);
                 }
                 break;
             }
             case 11: {
-                // Prompt for movie title and display its actors
                 std::string inputTitle = promptForString("Enter movie title (type 'exit' to cancel): ");
                 if (inputTitle.empty()) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
@@ -399,7 +408,6 @@ int main() {
                 break;
             }
             case 12: {
-                // Prompt for actor name and display known actors
                 std::string inputName = promptForString("Enter actor name (type 'exit' to cancel): ");
                 if (inputName.empty()) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
@@ -468,11 +476,10 @@ int main() {
                 std::cout << "Exiting... Thank you for using the Movie Management System!\n";
                 break;
             case 19: {
-                // Prompt for admin password
+                // Prompt for admin password to switch to ADMIN mode.
                 std::cout << "Enter admin password: ";
                 std::string password;
                 std::getline(std::cin, password);
-
                 if (password == "dsaadmin") {
                     app.setAdminMode(true);
                     std::cout << "[Switched to ADMIN mode]\n";
