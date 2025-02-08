@@ -9,6 +9,31 @@
 #include <ctime>     // for date-based logic (e.g., recent movies)
 #include <cassert> // for debugging purposes
 
+
+// ---------------------------------------------------------------------------
+// Case-insensitive string compare helper
+// ---------------------------------------------------------------------------
+static int caseInsensitiveCompareStrings(const char* s1, const char* s2) {
+    // Compare characters in a case-insensitive manner
+    // until a difference is found or both strings end.
+    while (*s1 && *s2) {
+        unsigned char c1 = static_cast<unsigned char>(std::tolower(*s1));
+        unsigned char c2 = static_cast<unsigned char>(std::tolower(*s2));
+        if (c1 < c2) return -1;
+        if (c1 > c2) return 1;
+        ++s1;
+        ++s2;
+    }
+    // If we exit the loop, then either we found a terminating null
+    // or the strings are equal up to the length of the shorter one.
+    // Compare the final characters (handles different-length strings).
+    unsigned char c1 = static_cast<unsigned char>(std::tolower(*s1));
+    unsigned char c2 = static_cast<unsigned char>(std::tolower(*s2));
+    if (c1 < c2) return -1;
+    if (c1 > c2) return 1;
+    return 0; // Fully equal
+}
+
 // Helper to trim quotes/spaces
 static std::string trimQuotes(const std::string& str) {
     size_t start = str.find_first_not_of(" \"");
@@ -60,8 +85,8 @@ bool MovieApp::isAdminMode() const {
 //---------------------------------------------------------------------------
 // CSV Reading
 //---------------------------------------------------------------------------
-// Define the actor id you want to debug
-const int DEBUG_ACTOR_ID = 4274963;
+
+
 
 //---------------------------------------------------------------------
 // readActors
@@ -100,11 +125,7 @@ void MovieApp::readActors(const std::string& filename) {
         int birth = std::atoi(birthStr.c_str());
         nameStr = trimQuotes(nameStr);
 
-        // Only log if this is the actor we are debugging.
-        if (id == DEBUG_ACTOR_ID) {
-            std::cout << "[DEBUG] readActors: Inserting actor DEBUG_ACTOR_ID=" << id
-                << " (" << nameStr << "), born " << birth << "\n";
-        }
+
 
         Actor actor(nameStr.c_str(), birth, id);
         actorTable.insert(actor);
@@ -205,17 +226,7 @@ void MovieApp::readCast(const std::string& filename) {
         Actor* actor = actorTable.find(aId);
         Movie* movie = movieTable.find(mId);
 
-        // Only log debug info if the actor id matches our debug id.
-        if (aId == DEBUG_ACTOR_ID) {
-            if (actor && movie) {
-                std::cout << "[DEBUG] readCast: Adding actor DEBUG_ACTOR_ID " << aId
-                    << " (" << actor->getName() << ") to movie ID "
-                    << movie->getId() << " (" << movie->getTitle() << ")\n";
-            }
-            else {
-                std::cout << "[DEBUG] readCast: Could not find actor or movie for DEBUG_ACTOR_ID " << aId << "\n";
-            }
-        }
+
 
         if (actor && movie) {
             movie->addActor(*actor);
@@ -451,28 +462,23 @@ static void mergeSortMovies(Movie* arr, int left, int right) {
     mergeSortMovies(arr, left, mid);
     mergeSortMovies(arr, mid + 1, right);
 
-    // Merge
     int size = right - left + 1;
-    // Value-initialize the temporary array to help with static analysis.
     Movie* temp = new Movie[size]();
     int i = left, j = mid + 1, k = 0;
 
     while (i <= mid && j <= right) {
-        if (std::strcmp(arr[i].getTitle(), arr[j].getTitle()) <= 0) {
-            assert(k < size);
+        // Use caseInsensitiveCompareStrings for a case-insensitive comparison of titles.
+        if (caseInsensitiveCompareStrings(arr[i].getTitle(), arr[j].getTitle()) <= 0) {
             temp[k++] = arr[i++];
         }
         else {
-            assert(k < size);
             temp[k++] = arr[j++];
         }
     }
     while (i <= mid) {
-        assert(k < size);
         temp[k++] = arr[i++];
     }
     while (j <= right) {
-        assert(k < size);
         temp[k++] = arr[j++];
     }
     for (int p = 0; p < size; ++p) {
@@ -480,6 +486,7 @@ static void mergeSortMovies(Movie* arr, int left, int right) {
     }
     delete[] temp;
 }
+
 
 
 #include <limits> // For std::numeric_limits
@@ -585,26 +592,22 @@ static void mergeSortActors(Actor* arr, int left, int right) {
     mergeSortActors(arr, mid + 1, right);
 
     int size = right - left + 1;
-    // Value-initialize the temporary array.
     Actor* temp = new Actor[size]();
     int i = left, j = mid + 1, k = 0;
 
     while (i <= mid && j <= right) {
-        if (std::strcmp(arr[i].getName(), arr[j].getName()) <= 0) {
-            assert(k < size);
+        // Case-insensitive compare
+        if (caseInsensitiveCompareStrings(arr[i].getName(), arr[j].getName()) <= 0) {
             temp[k++] = arr[i++];
         }
         else {
-            assert(k < size);
             temp[k++] = arr[j++];
         }
     }
     while (i <= mid) {
-        assert(k < size);
         temp[k++] = arr[i++];
     }
     while (j <= right) {
-        assert(k < size);
         temp[k++] = arr[j++];
     }
     for (int p = 0; p < size; ++p) {
