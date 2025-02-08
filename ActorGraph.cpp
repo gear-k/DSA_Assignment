@@ -231,8 +231,7 @@ List<int> ActorGraph::findConnectedActors(
     }
 
     BFSQueue queue;
-    std::cout << "[DEBUG] Starting BFS from actor index " << startIndex
-        << " with maxDepth " << maxDepth << std::endl;
+
     queue.enqueue(startIndex, 0);
     visited[startIndex] = true;
 
@@ -243,8 +242,7 @@ List<int> ActorGraph::findConnectedActors(
 
         int curIdx = current.idx;
         int curDepth = current.depth;
-        std::cout << "[DEBUG] Processing actor index " << curIdx
-            << " at depth " << curDepth << std::endl;
+
 
         // For each neighbor of the current index, if we haven't reached maxDepth, enqueue it.
         if (curDepth < maxDepth) {
@@ -252,8 +250,7 @@ List<int> ActorGraph::findConnectedActors(
                 if (!visited[neighborIdx]) {
                     visited[neighborIdx] = true;
                     discoveredIndices.add(neighborIdx);
-                    std::cout << "[DEBUG] Discovered neighbor actor index " << neighborIdx
-                        << " at depth " << (curDepth + 1) << std::endl;
+
                     queue.enqueue(neighborIdx, curDepth + 1);
                 }
                 return false; // continue iterating
