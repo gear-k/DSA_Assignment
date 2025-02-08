@@ -260,7 +260,7 @@ void MovieApp::addNewActor(const std::string& name, int birthYear) {
         std::cout << "[Error] Actor name cannot be empty.\n";
         return;
     }
-    if (birthYear <= 0 || birthYear >= 2025) {
+    if (birthYear <= 0 || birthYear > 2025) {
         std::cout << "[Error] Invalid birth year.\n";
         return;
     }
@@ -290,7 +290,7 @@ void MovieApp::addNewMovie(const std::string& title, const std::string& plot, in
         std::cout << "[Error] Movie title cannot be empty.\n";
         return;
     }
-    if (releaseYear <= 1800 || releaseYear >= 2025) {
+    if (releaseYear <= 1887 || releaseYear > 2025) {
         std::cout << "[Error] Invalid release year.\n";
         return;
     }
@@ -341,28 +341,55 @@ void MovieApp::updateActorDetails(int actorId, const std::string& newName, int n
         std::cout << "[Error] Only administrators can update actor details.\n";
         return;
     }
+
+    // Look up the Actor in the HashTable
     Actor* actor = actorTable.find(actorId);
     if (!actor) {
         std::cout << "[Error] Actor ID " << actorId << " not found.\n";
         return;
     }
 
-    // FIX: Trim the incoming name
+    // Validate inputs
     std::string trimmedName = trim(newName);
     if (trimmedName.empty()) {
         std::cout << "[Error] Actor name cannot be empty.\n";
         return;
     }
-    if (newYearOfBirth <= 0 || newYearOfBirth >= 2025) {
+    if (newYearOfBirth <= 0 || newYearOfBirth > 2025) {
         std::cout << "[Error] Invalid year of birth.\n";
         return;
     }
+
+    // 1) Update the Actor in the HashTable
     actor->setName(trimmedName.c_str());
     actor->setBirthYear(newYearOfBirth);
-
     actorTable.insert(*actor);
+
+    // 2) Also update all copies of this actor in every Movie
+    movieTable.forEach([&](const Movie& movieRef) -> bool {
+        // movieRef is const, so we cast away const
+        Movie& movie = const_cast<Movie&>(movieRef);
+
+        // If this movie has the actor in question...
+        if (movie.hasActor(actorId)) {
+            // Now update the copy in the movie's actor list
+            // movie.getActors().display(...) also gives a const Actor&, so we do another const_cast
+            movie.getActors().display([&](const Actor& castActor) -> bool {
+                Actor& mutableActor = const_cast<Actor&>(castActor);
+                if (mutableActor.getId() == actorId) {
+                    mutableActor.setName(trimmedName.c_str());
+                    mutableActor.setBirthYear(newYearOfBirth);
+                    // If you want to sync ratings too, you can do mutableActor.setRating(actor->getRating());
+                }
+                return false; // keep iterating
+                });
+        }
+        return false; // keep iterating over all movies
+        });
+
     std::cout << "[Success] Updated Actor ID " << actorId << "\n";
 }
+
 
 
 //---------------------------------------------------------------------------
@@ -389,7 +416,7 @@ void MovieApp::updateMovieDetails(int movieId,
         std::cout << "[Error] Movie title cannot be empty.\n";
         return;
     }
-    if (newReleaseYear <= 1800 || newReleaseYear >= 2025) {
+    if (newReleaseYear <= 1888 || newReleaseYear > 2025) {
         std::cout << "[Error] Invalid release year.\n";
         return;
     }

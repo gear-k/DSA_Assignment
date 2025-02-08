@@ -121,7 +121,6 @@ void displayMenu(bool isAdmin) {
         std::cout << "3.  Add Actor to Movie\n";
         std::cout << "4.  Update Actor Details\n";
         std::cout << "5.  Update Movie Details\n";
-        std::cout << "14. Run All Tests\n"; // Admin-only feature
         std::cout << "19. Toggle Admin/User Mode\n";
         std::cout << "13. Exit\n";
     }
@@ -207,7 +206,7 @@ int main() {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
                 }
-                int yearOfBirth = promptForInt("Enter year of birth (1-2024, or '0' to cancel): ", 1, 2024, true);
+                int yearOfBirth = promptForInt("Enter year of birth (1-2025, or '0' to cancel): ", 1, 2025, true);
                 if (yearOfBirth == 0) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
@@ -230,7 +229,7 @@ int main() {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
                 }
-                int releaseYear = promptForInt("Enter release year (1900-2024, '0' to cancel): ", 1900, 2024, true);
+                int releaseYear = promptForInt("Enter release year (1888-2025, '0' to cancel): ", 1888, 2025, true);
                 if (releaseYear == 0) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
@@ -240,12 +239,12 @@ int main() {
                 break;
             }
             case 3: {
-                int actorId = promptForInt("Enter actor ID (1-99999, or '0' to cancel): ", 1, 999999999, true);
+                int actorId = promptForInt("Enter actor ID (1-999999999, or '0' to cancel): ", 1, 999999999, true);
                 if (actorId == 0) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
                 }
-                int movieId = promptForInt("Enter movie ID (1-99999, or '0' to cancel): ", 1, 999999999, true);
+                int movieId = promptForInt("Enter movie ID (1-999999999, or '0' to cancel): ", 1, 999999999, true);
                 if (movieId == 0) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
@@ -254,7 +253,7 @@ int main() {
                 break;
             }
             case 4: {
-                int actorId = promptForInt("Enter actor ID (1-99999, or '0' to cancel): ", 1, 999999999, true);
+                int actorId = promptForInt("Enter actor ID (1-999999999, or '0' to cancel): ", 1, 999999999, true);
                 if (actorId == 0) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
@@ -264,7 +263,7 @@ int main() {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
                 }
-                int newYOB = promptForInt("Enter new year of birth (1-2024, or '0' to cancel): ", 1, 2024, true);
+                int newYOB = promptForInt("Enter new year of birth (1-2025, or '0' to cancel): ", 1, 2025, true);
                 if (newYOB == 0) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
@@ -273,7 +272,7 @@ int main() {
                 break;
             }
             case 5: {
-                int movieId = promptForInt("Enter movie ID (1-99999, or '0' to cancel): ", 1, 999999999, true);
+                int movieId = promptForInt("Enter movie ID (1-999999999, or '0' to cancel): ", 1, 999999999, true);
                 if (movieId == 0) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
@@ -291,7 +290,7 @@ int main() {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
                 }
-                int newYear = promptForInt("Enter new release year (1900-2024, '0' to cancel): ", 1900, 2024, true);
+                int newYear = promptForInt("Enter new release year (1888-2025, '0' to cancel): ", 1888, 2025, true);
                 if (newYear == 0) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
@@ -449,7 +448,7 @@ int main() {
                 break;
             }
             case 15: {
-                int actorId = promptForInt("Enter actor ID (1-99999, '0' to cancel): ", 1, 999999999, true);
+                int actorId = promptForInt("Enter actor ID (1-999999999, '0' to cancel): ", 1, 999999999, true);
                 if (actorId == 0) {
                     std::cout << "[Cancelled]\n";
                     break;
@@ -463,7 +462,7 @@ int main() {
                 break;
             }
             case 16: {
-                int movieId = promptForInt("Enter movie ID (1-99999, '0' to cancel): ", 1, 999999999, true);
+                int movieId = promptForInt("Enter movie ID (1-999999999, '0' to cancel): ", 1, 999999999, true);
                 if (movieId == 0) {
                     std::cout << "[Cancelled]\n";
                     break;
