@@ -4,18 +4,19 @@
 
 // ***** Template Definitions *****
 
-// Node constructor.
+// Node constructor initializes a node with the given data and sets next to nullptr.
 template <typename T>
 HashTable<T>::Node::Node(const T& d)
-    : data(d), next(nullptr) {}
+    : data(d), next(nullptr) {
+}
 
-// Computes the hash index.
+// Computes the hash index for a given key using modulo operation.
 template <typename T>
 int HashTable<T>::hashFunc(int key) const {
     return (key % capacity + capacity) % capacity;
 }
 
-// Constructor.
+// Constructor initializes the hash table with the given table size.
 template <typename T>
 HashTable<T>::HashTable(int tableSize)
     : capacity(tableSize), count(0)
@@ -26,7 +27,7 @@ HashTable<T>::HashTable(int tableSize)
     }
 }
 
-// Destructor.
+// Destructor clears the hash table and deallocates memory.
 template <typename T>
 HashTable<T>::~HashTable() {
     clear();
@@ -34,17 +35,16 @@ HashTable<T>::~HashTable() {
     table = nullptr;
 }
 
-// Inserts an item.
+// Inserts an item into the hash table.
 template <typename T>
 void HashTable<T>::insert(const T& item) {
     int key = getKey(item);
     int index = hashFunc(key);
 
-    // Check if an item with this key already exists.
+    // Check if an item with this key already exists and update it.
     Node* cur = table[index];
     while (cur) {
         if (getKey(cur->data) == key) {
-            // Update existing data.
             cur->data = item;
             return;
         }
@@ -58,7 +58,7 @@ void HashTable<T>::insert(const T& item) {
     ++count;
 }
 
-// Removes an item by key.
+// Removes an item by key from the hash table.
 template <typename T>
 bool HashTable<T>::remove(int key) {
     int index = hashFunc(key);
@@ -67,7 +67,7 @@ bool HashTable<T>::remove(int key) {
 
     while (cur) {
         if (getKey(cur->data) == key) {
-            // Found the item; remove it.
+            // If the item is found, remove it.
             if (prev) {
                 prev->next = cur->next;
             }
@@ -84,7 +84,7 @@ bool HashTable<T>::remove(int key) {
     return false; // Item not found.
 }
 
-// Finds an item by key.
+// Finds an item by key in the hash table.
 template <typename T>
 T* HashTable<T>::find(int key) const {
     int index = hashFunc(key);
@@ -98,7 +98,7 @@ T* HashTable<T>::find(int key) const {
     return nullptr;
 }
 
-// Clears the hash table.
+// Clears all items from the hash table.
 template <typename T>
 void HashTable<T>::clear() {
     for (int i = 0; i < capacity; ++i) {
@@ -119,13 +119,13 @@ bool HashTable<T>::isEmpty() const {
     return (count == 0);
 }
 
-// Returns the number of items.
+// Returns the number of items currently in the hash table.
 template <typename T>
 int HashTable<T>::size() const {
     return count;
 }
 
-// Applies a function to each item.
+// Applies a function to each item in the hash table.
 template <typename T>
 void HashTable<T>::forEach(const std::function<bool(const T&)>& fn) const {
     for (int i = 0; i < capacity; ++i) {
@@ -139,30 +139,31 @@ void HashTable<T>::forEach(const std::function<bool(const T&)>& fn) const {
     }
 }
 
-// Retrieves the total number of items.
+// Retrieves the total number of items in the hash table.
 template <typename T>
 int HashTable<T>::getCount() const {
     return size();
 }
 
-
+// Explicit template instantiations.
 template class HashTable<int>;
 template class HashTable<Actor>;
 template class HashTable<Movie>;
 
-
-// Specialization for int:
+// Specialization for int key retrieval.
 template <>
 int getKey<int>(const int& item) {
     return item;
 }
 
+// Specialization for Actor key retrieval (returns actor ID).
 #include "Actor.h"
 template <>
 int getKey<Actor>(const Actor& item) {
     return item.getId();
 }
 
+// Specialization for Movie key retrieval (returns movie ID).
 #include "Movie.h"
 template <>
 int getKey<Movie>(const Movie& item) {

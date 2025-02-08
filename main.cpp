@@ -17,15 +17,7 @@
 #include <string>
 #include <cctype>
 
- /**
-  * @brief Trims leading and trailing whitespace from a string.
-  *
-  * This function removes spaces, tabs, carriage returns, and newline characters
-  * from both the beginning and the end of the input string.
-  *
-  * @param str The string to be trimmed.
-  * @return A new string with whitespace removed from both ends.
-  */
+ // Removes leading and trailing whitespace from a string.
 static std::string trim(const std::string& str) {
     size_t start = str.find_first_not_of(" \t\r\n");
     size_t end = str.find_last_not_of(" \t\r\n");
@@ -35,18 +27,8 @@ static std::string trim(const std::string& str) {
     return str.substr(start, end - start + 1);
 }
 
-/**
- * @brief Prompts the user for an integer within a specified range.
- *
- * This function displays the given prompt and validates that the input is an integer
- * within the range [minVal, maxVal]. If allowCancel is true, entering 0 cancels the prompt.
- *
- * @param prompt The message to display to the user.
- * @param minVal The minimum allowed value.
- * @param maxVal The maximum allowed value.
- * @param allowCancel If true, 0 will signal cancellation.
- * @return The integer entered by the user, or 0 if cancelled.
- */
+// Prompts the user for an integer within a specified range.
+// If allowCancel is true, entering 0 cancels the prompt.
 int promptForInt(const std::string& prompt, int minVal, int maxVal, bool allowCancel = true) {
     while (true) {
         std::cout << prompt;
@@ -78,16 +60,8 @@ int promptForInt(const std::string& prompt, int minVal, int maxVal, bool allowCa
     }
 }
 
-/**
- * @brief Prompts the user for a non-empty string.
- *
- * This function displays the given prompt and ensures the user does not input an empty string.
- * If allowCancel is true and the user types "exit", an empty string is returned to signal cancellation.
- *
- * @param prompt The message to display to the user.
- * @param allowCancel If true, typing "exit" will cancel the prompt.
- * @return The non-empty string entered by the user, or an empty string if cancelled.
- */
+// Prompts the user for a non-empty string.
+// If allowCancel is true and the user types "exit", an empty string is returned to signal cancellation.
 std::string promptForString(const std::string& prompt, bool allowCancel = true) {
     while (true) {
         std::cout << prompt;
@@ -106,13 +80,7 @@ std::string promptForString(const std::string& prompt, bool allowCancel = true) 
     }
 }
 
-/**
- * @brief Displays the main menu based on the current mode (admin or user).
- *
- * This function prints the menu options to the console.
- *
- * @param isAdmin True if the application is in admin mode; false otherwise.
- */
+// Displays the main menu based on the current mode (admin or user).
 void displayMenu(bool isAdmin) {
     std::cout << "\n========== Movie Management System ==========\n";
     if (isAdmin) {
@@ -142,14 +110,7 @@ void displayMenu(bool isAdmin) {
     std::cout << "Enter your choice: ";
 }
 
-/**
- * @brief The main function for the Movie Management System.
- *
- * This function loads data, sets the application mode (admin/user), and
- * displays the main menu in a loop until the user chooses to exit.
- *
- * @return 0 upon successful execution.
- */
+// Main function to run the Movie Management System.
 int main() {
     MovieApp app;
     std::cout << "Loading data from CSV files...\n";

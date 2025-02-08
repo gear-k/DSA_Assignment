@@ -4,17 +4,19 @@
 
 // ***** Template Definitions *****
 
-// Node constructor.
+// Node constructor initializes a node with the given data and sets next to nullptr.
 template <typename T>
 List<T>::Node::Node(const T& d)
-    : data(d), next(nullptr) {}
+    : data(d), next(nullptr) {
+}
 
-// Default constructor.
+// Default constructor initializes an empty list.
 template <typename T>
 List<T>::List()
-    : head(nullptr), size(0) {}
+    : head(nullptr), size(0) {
+}
 
-// Copy constructor.
+// Copy constructor creates a deep copy of another list.
 template <typename T>
 List<T>::List(const List<T>& other)
     : head(nullptr), size(0) {
@@ -25,7 +27,7 @@ List<T>::List(const List<T>& other)
     }
 }
 
-// Copy assignment operator.
+// Copy assignment operator clears the current list and copies from another.
 template <typename T>
 List<T>& List<T>::operator=(const List<T>& other) {
     if (this != &other) { // Prevent self-assignment
@@ -39,13 +41,13 @@ List<T>& List<T>::operator=(const List<T>& other) {
     return *this;
 }
 
-// Destructor.
+// Destructor clears the list.
 template <typename T>
 List<T>::~List() {
     clear();
 }
 
-// clear() method.
+// Clears all elements in the list and deallocates memory.
 template <typename T>
 void List<T>::clear() {
     Node* cur = head;
@@ -58,7 +60,7 @@ void List<T>::clear() {
     size = 0;             // Reset the size.
 }
 
-// add() method.
+// Adds a new item to the end of the list.
 template <typename T>
 void List<T>::add(const T& item) {
     Node* newNode = new Node(item);
@@ -75,7 +77,7 @@ void List<T>::add(const T& item) {
     ++size;               // Increase the size.
 }
 
-// remove() method.
+// Removes an item from the list. Returns true if successful.
 template <typename T>
 bool List<T>::remove(const T& item) {
     if (!head) return false; // List is empty.
@@ -104,7 +106,8 @@ bool List<T>::remove(const T& item) {
     return false; // Item not found.
 }
 
-// display() method using std::function.
+// Iterates over the list and applies a function to each element.
+// The function can stop early by returning true.
 template <typename T>
 void List<T>::display(const std::function<bool(const T&)>& fn) const {
     Node* cur = head;
@@ -116,19 +119,19 @@ void List<T>::display(const std::function<bool(const T&)>& fn) const {
     }
 }
 
-// isEmpty() method.
+// Checks if the list is empty.
 template <typename T>
 bool List<T>::isEmpty() const {
     return (head == nullptr);
 }
 
-// getSize() method.
+// Returns the number of elements in the list.
 template <typename T>
 int List<T>::getSize() const {
     return size;
 }
 
-// getCount() method.
+// Returns the total count of elements, same as getSize().
 template <typename T>
 int List<T>::getCount() const {
     return size;
@@ -136,11 +139,6 @@ int List<T>::getCount() const {
 
 // ***** Explicit Template Instantiation *****
 // Instantiate for each type that you plan to use.
-// For example, for int:
 template class List<int>;
 template class List<Actor>;
 template class List<Movie>;
-
-// You can add additional instantiations as needed, e.g.:
-// template class List<Actor>;
-// template class List<Movie>;

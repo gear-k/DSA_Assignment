@@ -18,171 +18,72 @@
  *
  ***************************************************************************/
 
- /**
-  * @brief The Actor class represents an actor with basic information.
-  *
-  * The class stores the actor's name, unique identifier, birth year, age, and rating.
-  * The age is typically calculated from the birth year. The rating ranges from 0 (no
-  * rating) to 10 (maximum rating).
-  */
 class Actor {
 private:
-    char name[100];    ///< Fixed-size buffer for the actor's name.
-    int id;            ///< Unique identifier for the actor.
-    int birthYear;     ///< The actor's birth year.
-    int age;           ///< The actor's age (typically derived from the birth year).
-    int rating;        ///< Actor rating (range: 0 to 10).
+    char name[100];    // Fixed-size buffer for the actor's name
+    int id;            // Unique identifier for the actor
+    int birthYear;     // The actor's birth year
+    int age;           // The actor's age (usually derived from birth year)
+    int rating;        // Actor rating from 0 (no rating) to 10 (best)
 
 public:
     // --------------------------
     // Constructors
     // --------------------------
 
-
-
-    /**
-     * @brief Default constructor.
-     *
-     * Initializes the actor with default values. The name is set to an empty string,
-     * and numerical values (id, birthYear, age, rating) are initialized to 0.
-     */
+    // Default constructor initializes an empty actor object
     Actor();
 
-    /**
-     * @brief Parameterized constructor.
-     *
-     * Initializes the actor with the provided name, birth year, and actor ID.
-     * The rating is set to 0 by default, and age should be calculated accordingly.
-     *
-     * @param nm Pointer to the actor's name.
-     * @param birth The actor's birth year.
-     * @param aid The actor's unique identifier.
-     */
+    // Constructor that initializes an actor with a name, birth year, and ID
     Actor(const char* nm, int birth, int aid);
 
-    /**
-     * @brief Copy constructor.
-     *
-     * Creates a new Actor object as a deep copy of another.
-     *
-     * @param other The Actor object to copy.
-     */
+    // Copy constructor to create a duplicate actor from an existing one
     Actor(const Actor& other);
 
-    // --------------------------
-    // Assignment Operator
-    // --------------------------
-
-    /**
-     * @brief Assignment operator.
-     *
-     * Assigns values from another Actor object to this one.
-     *
-     * @param other The Actor object to assign from.
-     * @return Reference to the current Actor object.
-     */
+    // Overloaded assignment operator to safely assign values between actors
     Actor& operator=(const Actor& other);
 
     // --------------------------
     // Getters and Setters
     // --------------------------
 
-    /**
-     * @brief Retrieves the actor's ID.
-     *
-     * @return The actor's unique identifier.
-     */
+    // Returns the actor's unique ID
     int getId() const;
 
-    /**
-     * @brief Sets the actor's ID.
-     *
-     * @param newId The new unique identifier.
-     */
+    // Sets a new ID for the actor
     void setId(int newId);
 
-    /**
-     * @brief Retrieves the actor's name.
-     *
-     * @return A pointer to the actor's name string.
-     */
+    // Returns the actor's name
     const char* getName() const;
 
-    /**
-     * @brief Sets the actor's name.
-     *
-     * Copies the new name into the fixed-size buffer.
-     *
-     * @param newName Pointer to the new name string.
-     */
+    // Updates the actor's name, ensuring it's copied safely
     void setName(const char* newName);
 
-    /**
-     * @brief Retrieves the actor's birth year.
-     *
-     * @return The birth year.
-     */
+    // Returns the actor's birth year
     int getBirthYear() const;
 
-    /**
-     * @brief Sets the actor's birth year.
-     *
-     * Updates the actor's birth year and recalculates the age as needed.
-     *
-     * @param newYearOfBirth The new birth year.
-     */
+    // Sets a new birth year for the actor
     void setBirthYear(int newYearOfBirth);
 
-    /**
-     * @brief Retrieves the actor's age.
-     *
-     * @return The actor's age.
-     */
+    // Returns the actor's age
     int getAge() const;
 
-    // --------------------------
-    // Display Method
-    // --------------------------
-
-    /**
-     * @brief Displays the actor's details.
-     *
-     * Outputs the actor's ID, name, birth year, age, and rating to standard output.
-     */
+    // Displays all details of the actor (name, ID, birth year, age, and rating)
     void displayDetails() const;
 
     // --------------------------
     // Operators
     // --------------------------
 
-    /**
-     * @brief Equality operator.
-     *
-     * Compares two Actor objects based on their unique identifiers.
-     *
-     * @param other The Actor object to compare with.
-     * @return True if both actors have the same ID; false otherwise.
-     */
+    // Overloads the equality operator to compare actors by their ID
     bool operator==(const Actor& other) const {
         return id == other.id;
     }
 
-    // --------------------------
-    // Rating Accessors
-    // --------------------------
-
-    /**
-     * @brief Retrieves the actor's rating.
-     *
-     * @return The rating value (0 to 10).
-     */
+    // Returns the actor's rating
     int getRating() const { return rating; }
 
-    /**
-     * @brief Sets the actor's rating.
-     *
-     * @param r The new rating value (0 to 10).
-     */
+    // Sets the actor's rating (expected to be between 0 and 10)
     void setRating(int r) { rating = r; }
 };
 

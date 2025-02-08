@@ -5,142 +5,77 @@
 #include <functional> // For std::function
 
 /***************************************************************************
- * List.h
+ * Actor.h
  *
  * Team:            Gearoid, Cedric
  * Group:           1
  * Student IDs:     S10241866, S10241549
  *
  * Features Highlight:
- *   - Template-based singly linked list implementation.
- *   - Supports deep copy via copy constructor and assignment operator.
- *   - Provides functions for adding, removing, clearing, and iterating over items.
+ *   - Represents an actor with a fixed-size name buffer, birth year, age, and rating.
+ *   - Provides safe copying and assignment operations.
+ *   - Includes functions to get and set actor properties as well as display details.
  *
  ***************************************************************************/
 
- /**
-  * @brief A template-based singly linked list.
-  *
-  * Provides basic operations such as add, remove, clear, and iteration.
-  *
-  * @tparam T The type of elements stored in the list.
-  */
+// A template-based singly linked list that supports basic operations
+// like adding, removing, clearing, and iterating over elements.
 template <typename T>
 class List {
 private:
-    /**
-     * @brief Node structure representing an element in the list.
-     */
+    // Structure representing a node in the linked list.
     struct Node {
-        T data;       ///< The data stored in this node.
-        Node* next;   ///< Pointer to the next node in the list.
+        T data;       // The actual data stored in the node
+        Node* next;   // Pointer to the next node in the list
 
-        /**
-         * @brief Constructs a Node with the given data.
-         *
-         * @param d The data to store in the node.
-         */
+        // Constructor to initialize a node with data
         Node(const T& d);
     };
 
-    Node* head;  ///< Pointer to the head (first node) of the list.
-    int   size;  ///< Tracks the number of elements in the list.
+    Node* head;  // Pointer to the first node in the list
+    int   size;  // Keeps track of the number of elements in the list
 
 public:
     // --------------------------
     // Constructors and Destructor
     // --------------------------
 
-    /**
-     * @brief Default constructor.
-     *
-     * Initializes an empty list.
-     */
+    // Default constructor initializes an empty list.
     List();
 
-    /**
-     * @brief Copy constructor.
-     *
-     * Creates a deep copy of the provided list.
-     *
-     * @param other The list to copy from.
-     */
+    // Copy constructor creates a deep copy of another list.
     List(const List<T>& other);
 
-    /**
-     * @brief Copy assignment operator.
-     *
-     * Clears the current list and copies all elements from the other list.
-     *
-     * @param other The list to assign from.
-     * @return Reference to the current list.
-     */
+    // Assignment operator clears the current list and copies another list.
     List<T>& operator=(const List<T>& other);
 
-    /**
-     * @brief Destructor.
-     *
-     * Ensures proper memory cleanup by clearing the list.
-     */
+    // Destructor ensures proper memory cleanup.
     ~List();
 
     // --------------------------
     // Public Member Functions
     // --------------------------
 
-    /**
-     * @brief Clears the list and releases all allocated memory.
-     */
+    // Clears all elements in the list and deallocates memory.
     void clear();
 
-    /**
-     * @brief Adds a new item to the end of the list.
-     *
-     * @param item The item to add.
-     */
+    // Adds a new item to the end of the list.
     void add(const T& item);
 
-    /**
-     * @brief Removes an item from the list.
-     *
-     * Searches for the first occurrence of the item and removes it.
-     *
-     * @param item The item to remove.
-     * @return True if the item was found and removed; false otherwise.
-     */
+    // Removes an item from the list. Returns true if successful.
     bool remove(const T& item);
 
-    /**
-     * @brief Applies a function to each element in the list.
-     *
-     * Iterates over the list and applies the provided function to each element.
-     * The iteration stops early if the function returns true.
-     *
-     * @param fn A callable that takes a const reference to an element and returns a bool.
-     */
+    // Iterates over the list and applies a function to each element.
+    // If the function returns true, the iteration stops early.
     void display(const std::function<bool(const T&)>& fn) const;
 
-    /**
-     * @brief Checks if the list is empty.
-     *
-     * @return True if the list is empty; false otherwise.
-     */
+    // Checks if the list is empty.
     bool isEmpty() const;
 
-    /**
-     * @brief Retrieves the number of elements in the list.
-     *
-     * @return The size of the list.
-     */
+    // Returns the number of elements in the list.
     int getSize() const;
 
-    /**
-     * @brief Retrieves the count of elements in the list.
-     *
-     * This function is synonymous with getSize().
-     *
-     * @return The number of elements in the list.
-     */
+    // Retrieves the total count of elements, same as getSize().
     int getCount() const;
 };
 

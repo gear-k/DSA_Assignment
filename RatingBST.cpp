@@ -9,36 +9,20 @@
  *   - Binary Search Tree (BST) for storing movies and actors by their ratings.
  *   - Insertion and in-order traversal for both movies and actors.
  *   - Range queries to display movies/actors within a given rating range.
- *
  ***************************************************************************/
-
 
 #include "RatingBST.h"
 #include <iostream>
 
- /**
-  * @brief Constructs a new RatingBST object.
-  *
-  * Initializes the root pointer to nullptr.
-  */
+ // Constructor initializes an empty BST.
 RatingBST::RatingBST() : root(nullptr) {}
 
-/**
- * @brief Destroys the RatingBST object.
- *
- * Frees all dynamically allocated nodes in the BST.
- */
+// Destructor clears the BST.
 RatingBST::~RatingBST() {
     clearTree(root);
 }
 
-/**
- * @brief Recursively clears the BST.
- *
- * Deletes all nodes in the subtree rooted at the given node.
- *
- * @param node Pointer to the current BST node.
- */
+// Recursively deletes all nodes in the BST.
 void RatingBST::clearTree(BSTNode* node) {
     if (!node) return;
     clearTree(node->left);
@@ -46,33 +30,18 @@ void RatingBST::clearTree(BSTNode* node) {
     delete node;
 }
 
-/**
- * @brief Inserts a movie into the BST based on its rating.
- *
- * @param movie The movie to be inserted.
- */
+// Inserts a movie into the BST based on its rating.
 void RatingBST::insert(const Movie& movie) {
     insertMovie(root, movie);
 }
 
-/**
- * @brief Inserts an actor into the BST based on its rating.
- *
- * @param actor The actor to be inserted.
- */
+// Inserts an actor into the BST based on its rating.
 void RatingBST::insert(const Actor& actor) {
     insertActor(root, actor);
 }
 
-/**
- * @brief Helper function to insert a movie into the BST.
- *
- * Inserts the movie into the node that corresponds to its rating.
- * If a node with the same rating exists, the movie is added to that node.
- *
- * @param node Reference to the current BST node pointer.
- * @param movie The movie to be inserted.
- */
+// Inserts a movie into the correct position in the BST based on its rating.
+// If a node with the same rating exists, the movie is added to that node.
 void RatingBST::insertMovie(BSTNode*& node, const Movie& movie) {
     if (!node) {
         node = new BSTNode(movie.getRating());
@@ -89,15 +58,8 @@ void RatingBST::insertMovie(BSTNode*& node, const Movie& movie) {
     }
 }
 
-/**
- * @brief Helper function to insert an actor into the BST.
- *
- * Inserts the actor into the node that corresponds to its rating.
- * If a node with the same rating exists, the actor is added to that node.
- *
- * @param node Reference to the current BST node pointer.
- * @param actor The actor to be inserted.
- */
+// Inserts an actor into the correct position in the BST based on their rating.
+// If a node with the same rating exists, the actor is added to that node.
 void RatingBST::insertActor(BSTNode*& node, const Actor& actor) {
     if (!node) {
         node = new BSTNode(actor.getRating());
@@ -114,74 +76,52 @@ void RatingBST::insertActor(BSTNode*& node, const Actor& actor) {
     }
 }
 
-/**
- * @brief Performs an in-order traversal of the BST and displays movie details.
- *
- * @param node Pointer to the current BST node.
- */
+// Recursively traverses the BST and displays movie details in sorted order.
 void RatingBST::inOrderMovies(BSTNode* node) const {
     if (!node) return;
 
     inOrderMovies(node->left);
 
-    // Display all movies in node->movies
     node->movies.display([](const Movie& m) {
         m.displayDetails();
-        return false; // Keep going
+        return false; // Continue iteration
         });
 
     inOrderMovies(node->right);
 }
 
-/**
- * @brief Performs an in-order traversal of the BST and displays actor details.
- *
- * @param node Pointer to the current BST node.
- */
+// Recursively traverses the BST and displays actor details in sorted order.
 void RatingBST::inOrderActors(BSTNode* node) const {
     if (!node) return;
 
     inOrderActors(node->left);
 
-    // Display all actors in node->actors
     node->actors.display([](const Actor& a) {
         a.displayDetails();
-        return false; // Keep going
+        return false; // Continue iteration
         });
 
     inOrderActors(node->right);
 }
 
-/**
- * @brief Displays all movies stored in the BST.
- */
+// Displays all movies stored in the BST in ascending order of rating.
 void RatingBST::displayAllMovies() const {
     inOrderMovies(root);
 }
 
-/**
- * @brief Displays all actors stored in the BST.
- */
+// Displays all actors stored in the BST in ascending order of rating.
 void RatingBST::displayAllActors() const {
     inOrderActors(root);
 }
 
-/**
- * @brief Recursively traverses the BST to display movies within a rating range.
- *
- * @param node Pointer to the current BST node.
- * @param minRating The minimum rating (inclusive).
- * @param maxRating The maximum rating (inclusive).
- */
+// Recursively traverses the BST and displays movies within the specified rating range.
 void RatingBST::rangeMovies(BSTNode* node, int minRating, int maxRating) const {
     if (!node) return;
 
-    // Traverse left subtree if needed
     if (node->rating >= minRating) {
         rangeMovies(node->left, minRating, maxRating);
     }
 
-    // Display movies at this node if rating is within range
     if (node->rating >= minRating && node->rating <= maxRating) {
         node->movies.display([](const Movie& m) {
             m.displayDetails();
@@ -189,28 +129,19 @@ void RatingBST::rangeMovies(BSTNode* node, int minRating, int maxRating) const {
             });
     }
 
-    // Traverse right subtree if needed
     if (node->rating <= maxRating) {
         rangeMovies(node->right, minRating, maxRating);
     }
 }
 
-/**
- * @brief Recursively traverses the BST to display actors within a rating range.
- *
- * @param node Pointer to the current BST node.
- * @param minRating The minimum rating (inclusive).
- * @param maxRating The maximum rating (inclusive).
- */
+// Recursively traverses the BST and displays actors within the specified rating range.
 void RatingBST::rangeActors(BSTNode* node, int minRating, int maxRating) const {
     if (!node) return;
 
-    // Traverse left subtree if needed
     if (node->rating >= minRating) {
         rangeActors(node->left, minRating, maxRating);
     }
 
-    // Display actors at this node if rating is within range
     if (node->rating >= minRating && node->rating <= maxRating) {
         node->actors.display([](const Actor& a) {
             a.displayDetails();
@@ -218,28 +149,17 @@ void RatingBST::rangeActors(BSTNode* node, int minRating, int maxRating) const {
             });
     }
 
-    // Traverse right subtree if needed
     if (node->rating <= maxRating) {
         rangeActors(node->right, minRating, maxRating);
     }
 }
 
-/**
- * @brief Displays movies whose ratings are within the specified range.
- *
- * @param minRating The minimum rating (inclusive).
- * @param maxRating The maximum rating (inclusive).
- */
+// Displays movies whose ratings are within the specified range.
 void RatingBST::displayMoviesInRange(int minRating, int maxRating) const {
     rangeMovies(root, minRating, maxRating);
 }
 
-/**
- * @brief Displays actors whose ratings are within the specified range.
- *
- * @param minRating The minimum rating (inclusive).
- * @param maxRating The maximum rating (inclusive).
- */
+// Displays actors whose ratings are within the specified range.
 void RatingBST::displayActorsInRange(int minRating, int maxRating) const {
     rangeActors(root, minRating, maxRating);
 }
