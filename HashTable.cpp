@@ -229,10 +229,7 @@ int HashTable<T>::getCount() const {
     return size();
 }
 
-// ***** Explicit Template Instantiations *****
-template class HashTable<int>;
-template class HashTable<Actor>;
-template class HashTable<Movie>;
+
 
 // ***** Template Specializations for getKey *****
 
@@ -274,3 +271,8 @@ template <>
 int getKey<Movie>(const Movie& item) {
     return item.getId();
 }
+
+// ***** Explicit Template Instantiations *****
+template class HashTable<int>;
+template class HashTable<Actor>;
+template class HashTable<Movie>;
