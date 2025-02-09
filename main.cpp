@@ -167,7 +167,7 @@ int main() {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
                 }
-                int yearOfBirth = promptForInt("Enter year of birth (1-2025, or '0' to cancel): ", 1, 2025, true);
+                int yearOfBirth = promptForInt("Enter year of birth (1905-2025, or '0' to cancel): ", 1905, 2025, true);
                 if (yearOfBirth == 0) {
                     std::cout << "[Cancelled] Returning to main menu.\n";
                     break;
