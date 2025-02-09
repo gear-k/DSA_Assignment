@@ -42,7 +42,7 @@ public:
             int depth;  ///< Current depth in the BFS search.
         };
 
-        Pair data[2000] = {};  ///< Fixed-size array for storing queue elements.
+        Pair data[2000] = {}; 
         int front;        ///< Index of the front element.
         int rear;         ///< Index of the rear element.
         int count;        ///< Current number of elements in the queue.

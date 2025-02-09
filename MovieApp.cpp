@@ -463,7 +463,7 @@ void MovieApp::updateActorDetails(int actorId, const std::string& newName, int n
     movieTable.forEach([&](const Movie& movieRef) -> bool {
         Movie& movie = const_cast<Movie&>(movieRef);
         if (movie.hasActor(actorId)) {
-            movie.getActors().display([&](const Actor& castActor) -> bool {
+            movie.getActors().forEach([&](const Actor& castActor) -> bool {
                 Actor& mutableActor = const_cast<Actor&>(castActor);
                 if (mutableActor.getId() == actorId) {
                     mutableActor.setName(trimmedName.c_str());
@@ -912,7 +912,7 @@ void MovieApp::displayActorsInMovie(const std::string& movieTitle) const {
             foundMovie = true;
             int capacity = 100, count = 0;
             Actor* actorArr = new Actor[capacity];
-            m.getActors().display([&](const Actor& a) -> bool {
+            m.getActors().forEach([&](const Actor& a) -> bool {
                 if (count >= capacity) {
                     int newCapacity = capacity * 2;
                     Actor* newArr = new Actor[newCapacity];
@@ -982,7 +982,7 @@ void MovieApp::displayActorsKnownBy(const std::string& actorName) const {
         return;
     }
     std::cout << "Actors known by \"" << actorName << "\" (up to 2 levels):\n";
-    discovered.display([&](int idx) {
+    discovered.forEach([&](int idx) {
         if (idx < 0 || idx >= totalActors) return false;
         int realActorId = actorIds[idx];
         Actor* aPtr = actorTable.find(realActorId);

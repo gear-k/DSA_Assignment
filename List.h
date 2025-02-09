@@ -120,7 +120,7 @@ public:
      *
      * @param fn The function to apply to each element.
      */
-    void display(const std::function<bool(const T&)>& fn) const;
+    void forEach(const std::function<bool(const T&)>& fn) const;
 
     /**
      * @brief Checks if the list is empty.

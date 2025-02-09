@@ -135,7 +135,7 @@ void ActorGraph::buildActorGraph(
         int tmpCount = 0;
 
         // For each actor in the movie, find its index in the actorIds array.
-        mov.getActors().display([&](const Actor& a) {
+        mov.getActors().forEach([&](const Actor& a) {
             int idx = findActorIndexInArray(a.getId(), actorIds, actorCount);
             if (idx != -1 && tmpCount < TEMP_SIZE) {
                 tmpIdx[tmpCount++] = idx;
@@ -211,7 +211,7 @@ List<int> ActorGraph::findConnectedActors(
 
         // If the current depth is less than the maximum, explore adjacent nodes.
         if (curDepth < maxDepth) {
-            adjacencyLists[curIdx].display([&](int neighborIdx) {
+            adjacencyLists[curIdx].forEach([&](int neighborIdx) {
                 if (!visited[neighborIdx]) {
                     visited[neighborIdx] = true;
                     discoveredIndices.add(neighborIdx);

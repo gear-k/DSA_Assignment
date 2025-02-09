@@ -196,7 +196,7 @@ void Movie::setReleaseYear(int newYear) {
  */
 void Movie::addActor(const Actor& actor) {
     bool exists = false;
-    actors.display([&](const Actor& a) {
+    actors.forEach([&](const Actor& a) {
         if (a.getId() == actor.getId()) {
             exists = true;
             return true; // exit loop early
@@ -222,7 +222,7 @@ bool Movie::hasActor(const char* actorName) const {
     }
 
     bool found = false;
-    actors.display([&](const Actor& a) {
+    actors.forEach([&](const Actor& a) {
         const char* aName = a.getName();
         if (aName == nullptr) {
             std::cerr << "Error: Actor name is nullptr." << std::endl;
@@ -245,7 +245,7 @@ bool Movie::hasActor(const char* actorName) const {
  */
 bool Movie::hasActor(int actorId) const {
     bool found = false;
-    actors.display([&](const Actor& a) {
+    actors.forEach([&](const Actor& a) {
         if (a.getId() == actorId) {
             found = true;
             return true; // exit loop early

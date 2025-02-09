@@ -173,7 +173,7 @@ bool List<T>::remove(const T& item) {
  * @param fn A function that takes a const reference to an element and returns a bool.
  */
 template <typename T>
-void List<T>::display(const std::function<bool(const T&)>& fn) const {
+void List<T>::forEach(const std::function<bool(const T&)>& fn) const {
     Node* cur = head;
     while (cur) {
         if (fn(cur->data)) {

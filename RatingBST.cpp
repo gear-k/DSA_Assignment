@@ -121,7 +121,7 @@ void RatingBST::inOrderMovies(BSTNode* node) const {
     if (!node) return;
 
     inOrderMovies(node->left);
-    node->movies.display([](const Movie& m) {
+    node->movies.forEach([](const Movie& m) {
         m.displayDetails();
         return false; // Continue iteration.
         });
@@ -139,7 +139,7 @@ void RatingBST::inOrderActors(BSTNode* node) const {
     if (!node) return;
 
     inOrderActors(node->left);
-    node->actors.display([](const Actor& a) {
+    node->actors.forEach([](const Actor& a) {
         a.displayDetails();
         return false; // Continue iteration.
         });
@@ -175,7 +175,7 @@ void RatingBST::rangeMovies(BSTNode* node, int minRating, int maxRating) const {
     }
 
     if (node->rating >= minRating && node->rating <= maxRating) {
-        node->movies.display([](const Movie& m) {
+        node->movies.forEach([](const Movie& m) {
             m.displayDetails();
             return false; // Continue iteration.
             });
@@ -201,7 +201,7 @@ void RatingBST::rangeActors(BSTNode* node, int minRating, int maxRating) const {
     }
 
     if (node->rating >= minRating && node->rating <= maxRating) {
-        node->actors.display([](const Actor& a) {
+        node->actors.forEach([](const Actor& a) {
             a.displayDetails();
             return false; // Continue iteration.
             });

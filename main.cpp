@@ -344,7 +344,7 @@ int main() {
                 app.findActorsByName(inputName, matchedActors);
 
                 int matchCount = 0;
-                matchedActors.display([&](const Actor& a) {
+                matchedActors.forEach([&](const Actor& a) {
                     matchCount++;
                     return false;
                     });
@@ -355,7 +355,7 @@ int main() {
                 }
                 else if (matchCount == 1) {
                     int actorId = 0;
-                    matchedActors.display([&](const Actor& a) {
+                    matchedActors.forEach([&](const Actor& a) {
                         actorId = a.getId();
                         return true;
                         });
@@ -366,7 +366,7 @@ int main() {
                     static const int MAX_ACTORS = 50;
                     Actor actorArray[MAX_ACTORS];
                     int idx = 0;
-                    matchedActors.display([&](const Actor& a) {
+                    matchedActors.forEach([&](const Actor& a) {
                         if (idx < MAX_ACTORS) {
                             actorArray[idx++] = a;
                         }
