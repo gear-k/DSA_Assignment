@@ -1,6 +1,7 @@
 #include "ActorGraph.h"
 #include <cstring>
 #include <iostream>
+#include <cassert>
 
 /**
  * @brief Helper function to append an actor ID to a dynamic array.
@@ -24,6 +25,7 @@ static void appendActorId(int*& arr, int& count, int& capacity, int value) {
         arr = newArr;
         capacity = newCapacity;
     }
+    assert(count < capacity);  // Verify that there is room.
     arr[count++] = value;
 }
 
