@@ -1,43 +1,29 @@
 #ifndef HASHTABLE_H
 #define HASHTABLE_H
 
-#include <iostream>   // For optional debug prints
-#include <cstring>    // For strcmp, etc.
-#include <functional> // For std::function
+#include <iostream>
+#include <cstring>
+#include <functional>
 
-/***************************************************************************
- * HashTable.h
+/**
+ * @brief Template function to retrieve an integer key from an item.
  *
- * Team:            Gearoid, Cedric
- * Group:           1
- * Student IDs:     S10241866, S10241549
+ * This function must be specialized for each type T.
  *
- * Features Highlight:
- *   - Implements a simple separate-chaining hash table using linked-list chaining.
- *   - The table does not resize dynamically, so the initial size should be chosen carefully.
- *   - Provides basic operations such as insert, remove, find, and iteration.
- *
- ***************************************************************************/
-
- /**
-  * @brief Template function to retrieve an integer key from an item.
-  *
-  * This function must be specialized for each type T.
-  *
-  * @tparam T The type of the item.
-  * @param item The item from which to extract the key.
-  * @return int The key associated with the item.
-  */
+ * @tparam T The type of the item.
+ * @param item The item from which to extract the key.
+ * @return int The key associated with the item.
+ */
 template<typename T>
 int getKey(const T& item) {
     static_assert(sizeof(T) == 0, "getKey must be specialized for each type.");
-    return 0; // Placeholder; compiler forces specialization
+    return 0;
 }
 
 /**
  * @brief A simple separate-chaining hash table using linked-list chaining.
  *
- * This hash table does not resize dynamically, so choose the initial table size carefully.
+ * This hash table now supports dynamic resizing based on a maximum load factor.
  *
  * @tparam T The type of elements stored in the hash table.
  */
@@ -59,9 +45,10 @@ private:
         Node(const T& d);
     };
 
-    Node** table;    ///< Array of pointers to nodes (buckets).
-    int capacity;    ///< Number of buckets in the hash table.
-    int count;       ///< Total number of stored items.
+    Node** table;       ///< Array of pointers to nodes (buckets).
+    int capacity;       ///< Number of buckets in the hash table.
+    int count;          ///< Total number of stored items.
+    double maxLoadFactor;  ///< Maximum allowed load factor before resizing.
 
     /**
      * @brief Computes the hash index for a given key.
@@ -73,13 +60,23 @@ private:
      */
     int hashFunc(int key) const;
 
+    /**
+     * @brief Resizes the hash table to the specified new capacity.
+     *
+     * Rehashes all the current nodes into a new table with the new capacity.
+     *
+     * @param newCapacity The new number of buckets.
+     */
+    void rehash(int newCapacity);
+
 public:
     /**
-     * @brief Constructs a HashTable with a specified number of buckets.
+     * @brief Constructs a HashTable with a specified number of buckets and load factor.
      *
-     * @param tableSize The number of buckets in the hash table (default is 2000).
+     * @param tableSize The initial number of buckets (default is 2000).
+     * @param maxLoadFactor The maximum load factor before resizing (default is 1.0).
      */
-    HashTable(int tableSize = 2000);
+    HashTable(int tableSize = 2000, double maxLoadFactor = 1.0);
 
     /**
      * @brief Destructor for the HashTable.
