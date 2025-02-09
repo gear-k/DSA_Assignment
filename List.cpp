@@ -1,22 +1,42 @@
 #include "List.h"
 #include "Actor.h"
 #include "Movie.h"
+#include <functional>
 
-// ***** Template Definitions *****
-
-// Node constructor initializes a node with the given data and sets next to nullptr.
+/**
+ * @brief Node constructor for the List.
+ *
+ * Constructs a new node with the provided data and sets the next pointer to nullptr.
+ *
+ * @tparam T The type of data stored in the node.
+ * @param d The data to be stored in the node.
+ */
 template <typename T>
 List<T>::Node::Node(const T& d)
     : data(d), next(nullptr) {
 }
 
-// Default constructor initializes an empty list.
+/**
+ * @brief Default constructor for List.
+ *
+ * Initializes an empty list by setting the head pointer to nullptr and the size to 0.
+ *
+ * @tparam T The type of data stored in the list.
+ */
 template <typename T>
 List<T>::List()
     : head(nullptr), size(0) {
 }
 
-// Copy constructor creates a deep copy of another list.
+/**
+ * @brief Copy constructor for List.
+ *
+ * Creates a deep copy of the provided list by iterating through its nodes and adding
+ * each element to the new list.
+ *
+ * @tparam T The type of data stored in the list.
+ * @param other The list from which to create a deep copy.
+ */
 template <typename T>
 List<T>::List(const List<T>& other)
     : head(nullptr), size(0) {
@@ -27,10 +47,19 @@ List<T>::List(const List<T>& other)
     }
 }
 
-// Copy assignment operator clears the current list and copies from another.
+/**
+ * @brief Copy assignment operator for List.
+ *
+ * Clears the current list and then performs a deep copy of the provided list.
+ * Prevents self-assignment.
+ *
+ * @tparam T The type of data stored in the list.
+ * @param other The list from which to copy.
+ * @return A reference to the current list.
+ */
 template <typename T>
 List<T>& List<T>::operator=(const List<T>& other) {
-    if (this != &other) { // Prevent self-assignment
+    if (this != &other) { // Prevent self-assignment.
         clear();
         Node* current = other.head;
         while (current) {
@@ -41,30 +70,50 @@ List<T>& List<T>::operator=(const List<T>& other) {
     return *this;
 }
 
-// Destructor clears the list.
+/**
+ * @brief Destructor for List.
+ *
+ * Clears the list and deallocates memory used by its nodes.
+ *
+ * @tparam T The type of data stored in the list.
+ */
 template <typename T>
 List<T>::~List() {
     clear();
 }
 
-// Clears all elements in the list and deallocates memory.
+/**
+ * @brief Clears all elements in the list.
+ *
+ * Iterates over the list, deallocates memory for each node, and resets the head pointer
+ * and size to represent an empty list.
+ *
+ * @tparam T The type of data stored in the list.
+ */
 template <typename T>
 void List<T>::clear() {
     Node* cur = head;
     while (cur) {
         Node* tmp = cur;
         cur = cur->next;
-        delete tmp;      // Safely delete the node.
+        delete tmp; // Safely delete the node.
     }
-    head = nullptr;       // Reset the head pointer.
-    size = 0;             // Reset the size.
+    head = nullptr; // Reset the head pointer.
+    size = 0;       // Reset the size.
 }
 
-// Adds a new item to the end of the list.
+/**
+ * @brief Adds a new item to the end of the list.
+ *
+ * Creates a new node with the provided item and appends it to the end of the list.
+ *
+ * @tparam T The type of data stored in the list.
+ * @param item The item to be added.
+ */
 template <typename T>
 void List<T>::add(const T& item) {
     Node* newNode = new Node(item);
-    if (!head) {          // If the list is empty.
+    if (!head) { // If the list is empty.
         head = newNode;
     }
     else {
@@ -74,10 +123,18 @@ void List<T>::add(const T& item) {
         }
         temp->next = newNode; // Append the new node.
     }
-    ++size;               // Increase the size.
+    ++size; // Increase the size.
 }
 
-// Removes an item from the list. Returns true if successful.
+/**
+ * @brief Removes an item from the list.
+ *
+ * Searches for the first occurrence of the specified item and removes it from the list.
+ *
+ * @tparam T The type of data stored in the list.
+ * @param item The item to be removed.
+ * @return true if the item was found and removed; false otherwise.
+ */
 template <typename T>
 bool List<T>::remove(const T& item) {
     if (!head) return false; // List is empty.
@@ -106,8 +163,15 @@ bool List<T>::remove(const T& item) {
     return false; // Item not found.
 }
 
-// Iterates over the list and applies a function to each element.
-// The function can stop early by returning true.
+/**
+ * @brief Iterates over the list and applies a function to each element.
+ *
+ * Traverses the list and calls the provided function on each element. If the function
+ * returns true for an element, the iteration stops early.
+ *
+ * @tparam T The type of data stored in the list.
+ * @param fn A function that takes a const reference to an element and returns a bool.
+ */
 template <typename T>
 void List<T>::display(const std::function<bool(const T&)>& fn) const {
     Node* cur = head;
@@ -119,26 +183,43 @@ void List<T>::display(const std::function<bool(const T&)>& fn) const {
     }
 }
 
-// Checks if the list is empty.
+/**
+ * @brief Checks if the list is empty.
+ *
+ * @tparam T The type of data stored in the list.
+ * @return true if the list is empty; false otherwise.
+ */
 template <typename T>
 bool List<T>::isEmpty() const {
     return (head == nullptr);
 }
 
-// Returns the number of elements in the list.
+/**
+ * @brief Returns the number of elements in the list.
+ *
+ * @tparam T The type of data stored in the list.
+ * @return The number of elements in the list.
+ */
 template <typename T>
 int List<T>::getSize() const {
     return size;
 }
 
-// Returns the total count of elements, same as getSize().
+/**
+ * @brief Returns the total count of elements in the list.
+ *
+ * This function is equivalent to getSize().
+ *
+ * @tparam T The type of data stored in the list.
+ * @return The number of elements in the list.
+ */
 template <typename T>
 int List<T>::getCount() const {
     return size;
 }
 
 // ***** Explicit Template Instantiation *****
-// Instantiate for each type that you plan to use.
+// Instantiate the List template for each type that will be used.
 template class List<int>;
 template class List<Actor>;
 template class List<Movie>;
